@@ -21,9 +21,19 @@
 
 COUNT=0
 FILENAME="mytodo.todo"
+BACKUP_FLAG=1
+BACKUP_PREFIX=""
+BACKUP_SUFFIX=".bck"
 
 function tda {
   echo "${COUNT}. $@" >> $FILENAME
+
+  if [ $BACKUP_FLAG -eq 1 ]; then
+    echo "${COUNT}. $@" >> ${BACKUP_PREFIX}${FILENAME}${BACKUP_SUFFIX}
+  fi
+
   echo "L${COUNT} inserted."
   COUNT=$(expr $COUNT + 1)
+
+
 }
