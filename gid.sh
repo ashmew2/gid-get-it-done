@@ -6,6 +6,11 @@
 # To use from bash:
 #  $ . gid.sh
 
+# Automate loading of gid
+# This REDIRECTION BELOW is >> (APPEND).
+#
+# echo "source ${HOME}/gid/gid.sh" >> ~/.bashrc
+
 # Usage:
 # tda <list of stuff>
 
