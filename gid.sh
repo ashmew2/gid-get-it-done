@@ -4,7 +4,7 @@
 # author: ashmew2
 #
 # To use from bash:
-#  $ . todo.sh
+#  $ . gid.sh
 
 # Usage:
 # tda <list of stuff>
@@ -14,13 +14,13 @@
 # $ tda Code a game
 # $ tda work hard
 #
-# $ cat todo.todo
+# $ cat todo.gid
 # 0. Get grocery
 # 1. Code a game
 # 2. work hard
 
 COUNT=0
-FILENAME="mytodo.todo"
+FILENAME="${HOME}/mytodo.gid"
 BACKUP_FLAG=1
 BACKUP_PREFIX=""
 BACKUP_SUFFIX=".bck"
