@@ -31,7 +31,29 @@ BACKUP_PREFIX=""
 BACKUP_SUFFIX=".bck"
 
 function tda {
+    # Handle args
+
+    [[ $1 = --show ]] && {
+	cat $FILENAME
+	return
+    }
+
+    [[ $1 = --usage ]] && {
+	echo -e "\tExample usage:"
+	echo -e "\t--------------"
+	echo -e "\t\t$ tda Go to the grocery store at 13:00"
+	echo -e "\t\t$ tda Book a table for my date."
+	echo -e "\t\t$ tda fix memory corruption in the network stack"
+	echo -e "\t\t$ tda Conquer the world!"
+	echo -e "\t-------------"
+	echo -e "\ttda --show  : Show your todo list"
+	echo -e "\ttda --usage : Print this message and exit"
+	return
+    }
+
+
   echo "${COUNT}. $@" >> $FILENAME
+
 
   if [ $BACKUP_FLAG -eq 1 ]; then
     echo "${COUNT}. $@" >> ${BACKUP_PREFIX}${FILENAME}${BACKUP_SUFFIX}
@@ -42,3 +64,5 @@ function tda {
 
 
 }
+#TODO - fix handling of special symbols in input
+#TODO - gid-reload script (Call it gr) to reload from gid.sh
