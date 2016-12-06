@@ -37,7 +37,7 @@ source $installed_file
 
 ## Tell the user what to do by running tda --usage
 echo "Installation Finished. No errors."
-echo -e "The todo file is at $installed_file\n\n"
+echo -e "The todo file is at $todo_file\n\n"
 
 tda --usage
 
