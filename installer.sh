@@ -49,11 +49,11 @@ grep "alias tdr=" $BASHRC &>/dev/null
 ## Load the $installed_file to enable gid (For tda --usage later in the script)
 source $installed_file
 
-## Tell the user what to do by running tda --usage
 echo "Installation Finished. No errors."
 echo -e "The todo file is at $installed_file\n\n"
 
+## Tell the user what to do by running tda --usage
 tda --usage
-[[ $? -ne 0 ]]
+
 echo -e "\ntda and friends will be in all new shells. Enjoy."
 ## GoodBye!
