@@ -34,7 +34,7 @@ function tda {
     # Handle args
 
     [[ $1 = --show ]] && {
-	cat $FILENAME
+	cat -n $FILENAME
 	return
     }
 
@@ -45,12 +45,16 @@ function tda {
 	echo -e "\t\t$ tda Book a table for my date."
 	echo -e "\t\t$ tda fix memory corruption in the network stack"
 	echo -e "\t\t$ tda Conquer the world!"
-	echo -e "\t-------------"
+	echo -e "\t--------------"
 	echo -e "\ttda --show  : Show your todo list"
 	echo -e "\ttda --usage : Print this message and exit"
 	return
     }
 
+    [[ $1 == --reload ]] && {
+
+	return
+    }
 
   echo "${COUNT}. $@" >> $FILENAME
 
@@ -64,5 +68,6 @@ function tda {
 
 
 }
+
 #TODO - fix handling of special symbols in input
 #TODO - gid-reload script (Call it gr) to reload from gid.sh
