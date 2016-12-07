@@ -35,7 +35,7 @@ function tda {
 
     [[ $1 = --show ]] && {
 	cat -n $FILENAME
-	return
+	return 0
     }
 
     [[ $1 = --usage ]] && {
@@ -47,17 +47,14 @@ function tda {
 	echo -e "\t\t$ tda Conquer the world!"
 	echo -e "\t--------------"
 	echo -e "\ttda --show  : Show your todo list"
+	echo -e "\ttdr         : Reload the gid.sh script"
 	echo -e "\ttda --usage : Print this message and exit"
-	return
-    }
+	echo -e "\t--------------"
 
-    [[ $1 == --reload ]] && {
-
-	return
+	return 0
     }
 
   echo "${COUNT}. $@" >> $FILENAME
-
 
   if [ $BACKUP_FLAG -eq 1 ]; then
     echo "${COUNT}. $@" >> ${BACKUP_PREFIX}${FILENAME}${BACKUP_SUFFIX}

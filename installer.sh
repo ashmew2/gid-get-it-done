@@ -25,14 +25,28 @@ cp $base_dir/gid.sh $install_dir/gid.sh
 chmod 740 $installed_file
 chmod 700 $todo_file
 
-## TODO: Check with grep if gid.sh is already sourced.
+## Check $BASHRC with grep if gid is already installed.
+grep "## Automatically added by gid installer" $BASHRC &>/dev/null
 
-## Update .bashrc to auto load on shell startup
-echo "" >> $BASHRC
-echo "## Automatically added by gid installer at $(date)" >> $BASHRC
-echo "source $installed_file" >> $BASHRC
+[[ $? -ne 0 ]] && {
 
-## Load the $installed_file to enable gid
+    echo >> $BASHRC
+    echo "## Automatically added by gid installer at $(date --utc)" >> $BASHRC
+    echo "source $installed_file" >> $BASHRC
+}
+
+## Check $BASHRC with grep if tdr is defined
+grep "alias tdr=" $BASHRC &>/dev/null
+
+[[ $? -ne 0 ]] && {
+
+    ## Set an alias in bashrc to do the source as we can't do it for our parent (why not?)
+    echo >> $BASHRC
+    echo "## reload todoman with this alias (Added : $(date --utc))" >> $BASHRC
+    echo "alias tdr='source $installed_file'" >> $BASHRC
+}
+
+## Load the $installed_file to enable gid (For tda --usage later in the script)
 source $installed_file
 
 ## Tell the user what to do by running tda --usage
@@ -40,6 +54,6 @@ echo "Installation Finished. No errors."
 echo -e "The todo file is at $installed_file\n\n"
 
 tda --usage
-
-echo -e "\ntda will be available in all new shells. Enjoy."
+[[ $? -ne 0 ]]
+echo -e "\ntda and friends will be in all new shells. Enjoy."
 ## GoodBye!
