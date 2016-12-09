@@ -50,7 +50,7 @@ grep "alias tdr=" $BASHRC &>/dev/null
 source $installed_file
 
 echo "Installation Finished. No errors."
-echo -e "The todo file is at $installed_file\n\n"
+echo -e "The todo file is at $todo_file\n\n"
 
 ## Tell the user what to do by running tda --usage
 tda --usage
