@@ -1,6 +1,4 @@
 # Ultimate Todo Man
-# Add more functions like viewing
-# Add network sync to keep safe with buffering.
 # author: ashmew2
 #
 # To use from bash:
@@ -79,7 +77,12 @@ function tda {
     # Handle args
 
     [[ $1 = --show ]] && {
-	cat -n $GID_TODO_FILE
+	num=0
+	while read -r; do
+	    echo -e "====\n#${num}:\n===="
+	    echo $REPLY
+	    num=$(expr $num + 1)
+	done < $GID_TODO_FILE | less
 	return 0
     }
 
@@ -117,4 +120,5 @@ function tda {
 #TODO - fix handling of special symbols in input
 #TODO - Decide if we need a tda-clean function as well to clean up old files etc or not.
 #TODO - Add a 'd' option to tdre for deleting during review
-#TODO - Beautify tda --show somehow and show item # more distinctly to support a possible tdmodify -d <num>
+#TODO - Add network sync to keep safe with buffering.
+#TODO - Fix the naming scheme of all binaries, maybe tdreload is better than tdr as we can have tdremove and tdedit as well in that case
