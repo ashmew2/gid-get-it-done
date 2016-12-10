@@ -24,27 +24,28 @@
 # 1. Code a game
 # 2. work hard
 
-FILENAME="${HOME}/mytodo.gid"
+GID_TODO_FILE="${HOME}/mytodo.gid"
 BACKUP_FLAG=1
 BACKUP_PREFIX=""
 BACKUP_SUFFIX=".bck"
+REVIEW_THRESHOLD=20
 
-
-function tda-review {
+# Function for reviewing the todo list
+function tdre {
 
     # Be safe (not pregnant)
-    cp -a ${FILENAME} ${FILENAME}.$(date +%s)
+    cp -a ${GID_TODO_FILE} ${GID_TODO_FILE}.$(date +%s)
 
-    IMP_FILE=${FILENAME}.i.tmp
-    OTHER_FILE=${FILENAME}.o.tmp
-    NEW_FILE=${FILENAME}.new.tmp
+    IMP_FILE=${GID_TODO_FILE}.i.tmp
+    OTHER_FILE=${GID_TODO_FILE}.o.tmp
+    NEW_FILE=${GID_TODO_FILE}.new.tmp
 
     touch $IMP_FILE
     touch $OTHER_FILE
     touch $NEW_FILE
 
     # rm -f the old files as well. It has a .tmp extension, we expect the user to understand.
-    IFS=$'\t\n'; todo_file=( $(cat $FILENAME) ); unset IFS
+    IFS=$'\t\n'; todo_file=( $(cat $GID_TODO_FILE) ); unset IFS
 
     for item in "${todo_file[@]}"; do
 
@@ -53,19 +54,18 @@ function tda-review {
 	impbool=y
 	read -p "Important? [ Everything except [yY] is a NO ]: " impbool
 
-	# Stupid shit
 	if [[ "$impbool" == "y" || "$impbool" == "Y" ]]; then
 	    echo "$item" >> $IMP_FILE
 	else
 	    echo "$item" >> $OTHER_FILE
 	fi
     done
-    cat $IMP_FILE $OTHER_FILE >> $FILENAME.new.tmp
+    cat $IMP_FILE $OTHER_FILE >> $GID_TODO_FILE.new.tmp
 
     # Show the diff so that user can undo major screw ups if [requ|des]ired
-    diff -u $FILENAME $NEW_FILE
-    > $FILENAME
-    cat $NEW_FILE > $FILENAME
+    diff -u $GID_TODO_FILE $NEW_FILE
+    > $GID_TODO_FILE
+    cat $NEW_FILE > $GID_TODO_FILE
 
     # Wind up
     rm -f $IMP_FILE
@@ -79,7 +79,7 @@ function tda {
     # Handle args
 
     [[ $1 = --show ]] && {
-	cat -n $FILENAME
+	cat -n $GID_TODO_FILE
 	return 0
     }
 
@@ -92,22 +92,29 @@ function tda {
 	echo -e "\t\t$ tda Conquer the world!"
 	echo -e "\t--------------"
 	echo -e "\ttda --show  : Show your todo list"
-	echo -e "\ttdr         : Reload the gid.sh script"
 	echo -e "\ttda --usage : Print this message and exit"
-	echo -e "\ttda-review  : Review and sort your todo list"
+	echo -e "\ttdr         : Reload the gid.sh script"
+	echo -e "\ttdre        : Review and sort your todo list"
 	echo -e "\t--------------"
 
 	return 0
     }
+    
+    echo "$@" >> $GID_TODO_FILE
 
-  echo "$@" >> $FILENAME
+    # Honor the REVIEW_THRESHOLD
+    num_items=$(wc -l $GID_TODO_FILE | awk '{print $1}')
 
-  if [ $BACKUP_FLAG -eq 1 ]; then
-    echo "$@" >> ${BACKUP_PREFIX}${FILENAME}${BACKUP_SUFFIX}
-  fi
+    if [[ $num_items -ge $REVIEW_THRESHOLD ]]; then
+	echo "[Warning] $num_items in TODO. Advice: tdre"
+    fi
+
+    if [ $BACKUP_FLAG -eq 1 ]; then
+	echo "$@" >> ${BACKUP_PREFIX}${GID_TODO_FILE}${BACKUP_SUFFIX}
+    fi
 }
 
 #TODO - fix handling of special symbols in input
-#TODO - gid-reload script (Call it gr) to reload from gid.sh
 #TODO - Decide if we need a tda-clean function as well to clean up old files etc or not.
-#TODO - Change $FILENAME to some other var name
+#TODO - Add a 'd' option to tdre for deleting during review
+#TODO - Beautify tda --show somehow and show item # more distinctly to support a possible tdmodify -d <num>
