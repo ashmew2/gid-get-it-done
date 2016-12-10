@@ -50,11 +50,11 @@ function tdre {
 	echo $item
 
 	impbool=y
-	read -p "Important? [ Everything except [yY] is a NO ]: " impbool
+	read -p "Important? [ [yY]: Yes; [dD]: Delete; Others: No ]: " impbool
 
 	if [[ "$impbool" == "y" || "$impbool" == "Y" ]]; then
 	    echo "$item" >> $IMP_FILE
-	else
+	elif [[ "$impbool" != "d" && "$impbool" != "D" ]]; then
 	    echo "$item" >> $OTHER_FILE
 	fi
     done
