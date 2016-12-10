@@ -76,6 +76,11 @@ function tdre {
 function tda {
     # Handle args
 
+    [[ $1 = --file ]] && {
+	echo $GID_TODO_FILE
+	return 0
+    }
+
     [[ $1 = --show ]] && {
 	num=0
 	while read -r; do
@@ -96,6 +101,7 @@ function tda {
 	echo -e "\t--------------"
 	echo -e "\ttda --show  : Show your todo list"
 	echo -e "\ttda --usage : Print this message and exit"
+	echo -e "\ttda --file  : Print the full path to todo file"
 	echo -e "\ttdr         : Reload the gid.sh script"
 	echo -e "\ttdre        : Review and sort your todo list"
 	echo -e "\t--------------"
