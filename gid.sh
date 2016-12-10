@@ -24,7 +24,6 @@
 # 1. Code a game
 # 2. work hard
 
-COUNT=0
 FILENAME="${HOME}/mytodo.gid"
 BACKUP_FLAG=1
 BACKUP_PREFIX=""
@@ -101,16 +100,11 @@ function tda {
 	return 0
     }
 
-  echo "${COUNT}. $@" >> $FILENAME
+  echo "$@" >> $FILENAME
 
   if [ $BACKUP_FLAG -eq 1 ]; then
-    echo "${COUNT}. $@" >> ${BACKUP_PREFIX}${FILENAME}${BACKUP_SUFFIX}
+    echo "$@" >> ${BACKUP_PREFIX}${FILENAME}${BACKUP_SUFFIX}
   fi
-
-  echo "L${COUNT} inserted."
-  COUNT=$(expr $COUNT + 1)
-
-
 }
 
 #TODO - fix handling of special symbols in input
