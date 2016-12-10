@@ -30,6 +30,52 @@ BACKUP_FLAG=1
 BACKUP_PREFIX=""
 BACKUP_SUFFIX=".bck"
 
+
+function tda-review {
+
+    # Be safe (not pregnant)
+    cp -a ${FILENAME} ${FILENAME}.$(date +%s)
+
+    IMP_FILE=${FILENAME}.i.tmp
+    OTHER_FILE=${FILENAME}.o.tmp
+    NEW_FILE=${FILENAME}.new.tmp
+
+    touch $IMP_FILE
+    touch $OTHER_FILE
+    touch $NEW_FILE
+
+    # rm -f the old files as well. It has a .tmp extension, we expect the user to understand.
+    IFS=$'\t\n'; todo_file=( $(cat $FILENAME) ); unset IFS
+
+    for item in "${todo_file[@]}"; do
+
+	echo $item
+
+	impbool=y
+	read -p "Important? [ Everything except [yY] is a NO ]: " impbool
+
+	# Stupid shit
+	if [[ "$impbool" == "y" || "$impbool" == "Y" ]]; then
+	    echo "$item" >> $IMP_FILE
+	else
+	    echo "$item" >> $OTHER_FILE
+	fi
+    done
+    cat $IMP_FILE $OTHER_FILE >> $FILENAME.new.tmp
+
+    # Show the diff so that user can undo major screw ups if [requ|des]ired
+    diff -u $FILENAME $NEW_FILE
+    > $FILENAME
+    cat $NEW_FILE > $FILENAME
+
+    # Wind up
+    rm -f $IMP_FILE
+    rm -f $OTHER_FILE
+    rm -f $NEW_FILE
+
+    # TODO: Delete the backup here? Probably leave it around for $AGE..
+}
+
 function tda {
     # Handle args
 
@@ -49,6 +95,7 @@ function tda {
 	echo -e "\ttda --show  : Show your todo list"
 	echo -e "\ttdr         : Reload the gid.sh script"
 	echo -e "\ttda --usage : Print this message and exit"
+	echo -e "\ttda-review  : Review and sort your todo list"
 	echo -e "\t--------------"
 
 	return 0
@@ -68,3 +115,5 @@ function tda {
 
 #TODO - fix handling of special symbols in input
 #TODO - gid-reload script (Call it gr) to reload from gid.sh
+#TODO - Decide if we need a tda-clean function as well to clean up old files etc or not.
+#TODO - Change $FILENAME to some other var name
