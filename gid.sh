@@ -27,6 +27,8 @@ BACKUP_FLAG=1
 BACKUP_PREFIX=""
 BACKUP_SUFFIX=".bck"
 REVIEW_THRESHOLD=20
+#CYAN='\033[0;36m'
+#NC='\033[0m'
 
 # Default timeout if no arg to tda --timer
 DEFAULT_TIMEOUT=1
@@ -129,8 +131,16 @@ function tda {
 
 	return 0
     }
-    
+    if [ $# -eq 0 ]
+      then
+        {
+          #echo -e "${CYAN}No task mentioned to be added. (Ex: tda *task to be added*)${NC}"
+          return 0
+        }
+    fi
     echo "$@" >> $GID_TODO_FILE
+
+
 
     # Honor the REVIEW_THRESHOLD
     num_items=$(wc -l $GID_TODO_FILE | awk '{print $1}')
