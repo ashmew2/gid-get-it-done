@@ -148,3 +148,4 @@ function tda {
 #TODO - Decide if we need a tda-clean function as well to clean up old files etc or not.
 #TODO - Add network sync to keep safe with buffering.
 #TODO - Fix the naming scheme of all binaries, maybe tdreload is better than tdr as we can have tdremove and tdedit as well in that case
+#TODO - Add a tda --expire <DATE-TIME> to set a reminder which expires in the future. --timer and --expire (or renamed) should have a common core.
