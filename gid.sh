@@ -50,7 +50,7 @@ function tdre {
 	echo $item
 
 	impbool=y
-	read -p "Important? [ [yY]: Yes; [dD]: Delete; Others: No ]: " impbool
+	read -p "Important? [ [yY]: Yes; [dD]: Delete; [Any other key]: No ]: " impbool
 
 	if [[ "$impbool" == "y" || "$impbool" == "Y" ]]; then
 	    echo "$item" >> $IMP_FILE
