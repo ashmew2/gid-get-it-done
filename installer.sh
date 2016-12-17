@@ -9,7 +9,10 @@ read -p "Enter the install dir [Press enter for: $default_install_dir]" install_
 [[ -z $install_dir ]] && install_dir=$default_install_dir
 
 base_dir=.
-BASHRC=$HOME/.bashrc
+BASHRC=$HOME/.bash_profile
+[[ $(uname -a | grep -i darwin &> /dev/null)=0 ]] && bashrc=$HOME/.bash_profile
+	BASHRC=$HOME/.bash_profile
+
 todo_file=$install_dir/mytodo.gid
 installed_file=$install_dir/gid.sh
 
