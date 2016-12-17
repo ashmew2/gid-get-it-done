@@ -28,6 +28,9 @@ BACKUP_PREFIX=""
 BACKUP_SUFFIX=".bck"
 REVIEW_THRESHOLD=20
 
+# Default timeout if no arg to tda --timer
+DEFAULT_TIMEOUT=1
+
 # Function for reviewing the todo list
 function tdre {
 
@@ -76,6 +79,23 @@ function tdre {
 function tda {
     # Handle args
 
+    # TODO: Do we need a proper timing service?
+    # TODO: Enable script execution after timer expires.
+
+    [[ $1 = --timer ]]  &&  {
+	
+	if [[ $2 == "" ]]; then
+	    timeout=$DEFAULT_TIMEOUT
+	else
+	    timeout=$2
+	fi
+
+	sleep $timeout && echo "Timer Expired for $timeout second(s)." &
+	# >> $(ls -l /proc/$$/fd/1 | awk '{print $NF}') &
+
+	return 0
+    }
+
     [[ $1 = --file ]] && {
 	echo $GID_TODO_FILE
 	return 0
@@ -102,6 +122,7 @@ function tda {
 	echo -e "\ttda --show  : Show your todo list"
 	echo -e "\ttda --usage : Print this message and exit"
 	echo -e "\ttda --file  : Print the full path to todo file"
+	echo -e "\ttda --timer [seconds]: Sleep for numseconds and notify parent terminal."
 	echo -e "\ttdr         : Reload the gid.sh script"
 	echo -e "\ttdre        : Review and sort your todo list"
 	echo -e "\t--------------"
@@ -125,6 +146,5 @@ function tda {
 
 #TODO - fix handling of special symbols in input
 #TODO - Decide if we need a tda-clean function as well to clean up old files etc or not.
-#TODO - Add a 'd' option to tdre for deleting during review
 #TODO - Add network sync to keep safe with buffering.
 #TODO - Fix the naming scheme of all binaries, maybe tdreload is better than tdr as we can have tdremove and tdedit as well in that case
