@@ -16,6 +16,7 @@ vector<int> t;
 map<int, std::thread> m;
 
 void timeout(int time_in_sex, int thread_id, string cmd_to_execute) {
+
   cout<<"dreamer " <<thread_id<<": Created for : "<<time_in_sex<<" seconds"<<endl;
   this_thread::sleep_for(chrono::seconds(time_in_sex));
   cout<<"dreamer " <<thread_id<<": woke up"<<endl;
@@ -39,8 +40,6 @@ int main() {
   signal(SIGUSR1, handle_sigusr1);
   int POLL_INTERVAL=1;
   int tid =0;
-  int fd[2];
-  int piped=pipe(fd);
   int number_of_lines_read=0;
   int last_offset=0;
 
@@ -57,7 +56,6 @@ int main() {
 
       sig_caught=0;
 
-      /* The data about the new thread should already be in the fd */
       /* very bad way to get this done */
       std::ifstream input( "/tmp/timer" );
       if (input == NULL) {
@@ -70,24 +68,23 @@ int main() {
 
       /* time get */
       getline(input, timeline);
-      if(timeline=="")
-	cout<<"skipping time<=0 request"<<endl;
-      else
-	number_of_lines_read++;
+
+      if(timeline.length() == 0)
+	continue;
+
+      number_of_lines_read++;
 
       int time_for_task=atoi(timeline.c_str());
       /* todo; special case 0? */
 
       /* cmd get */
       getline(input, cmdline);
-      if(cmdline=="") {
-	cout<<"skipping cmdline=empty request"<<endl;
-      }
-      else {
-	++tid;
-	m[tid]=std::thread(timeout, time_for_task, tid, cmdline);
-	number_of_lines_read++;
-      }
+      if(cmdline.length() == 0)
+	continue;
+
+      number_of_lines_read++;
+      ++tid;
+      m[tid]=std::thread(timeout, time_for_task, tid, cmdline);
 
       input.close();
     }
