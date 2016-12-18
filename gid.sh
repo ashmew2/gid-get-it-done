@@ -63,6 +63,7 @@ function tdre {
 	    echo "$item" >> $OTHER_FILE
 	fi
     done
+
     cat $IMP_FILE $OTHER_FILE >> $GID_TODO_FILE.new.tmp
 
     # Show the diff so that user can undo major screw ups if [requ|des]ired
@@ -79,6 +80,13 @@ function tdre {
 }
 
 function tda {
+
+    # make sure we have some args.
+    if [[ $# -eq 0 ]]; then
+          #echo -e "${CYAN}No task mentioned to be added. (Ex: tda *task to be added*)${NC}"
+          return 0
+    fi
+
     # Handle args
 
     # TODO: Do we need a proper timing service?
@@ -149,16 +157,8 @@ function tda {
 
 	return 0
     }
-    if [ $# -eq 0 ]
-      then
-        {
-          #echo -e "${CYAN}No task mentioned to be added. (Ex: tda *task to be added*)${NC}"
-          return 0
-        }
-    fi
+
     echo "$@" >> $GID_TODO_FILE
-
-
 
     # Honor the REVIEW_THRESHOLD
     num_items=$(wc -l $GID_TODO_FILE | awk '{print $1}')
