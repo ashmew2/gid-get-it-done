@@ -15,7 +15,7 @@ static mutex theLock;
 vector<int> t;
 map<int, std::thread> m;
 
-void timeout(int time_in_sex, int thread_id) {
+void timeout(int time_in_sex, int thread_id, string cmd_to_execute) {
   cout<<"dreamer " <<thread_id<<": Created for : "<<time_in_sex<<" seconds"<<endl;
   this_thread::sleep_for(chrono::seconds(time_in_sex));
   cout<<"dreamer " <<thread_id<<": woke up"<<endl;
@@ -23,6 +23,7 @@ void timeout(int time_in_sex, int thread_id) {
   // Do what we want to do here, like play an alarm or trigger the phone
   // Or call the phone. Each thread should have a final purpose that gid.sh set for it
   // using USR1
+  cout<<"Executing command: "<<cmd_to_execute<<endl;
 
   theLock.lock();
   t.push_back(thread_id);
@@ -45,13 +46,17 @@ int main() {
 
   /* TODO - this wont scale for large and will overflow eventually */
   /* TODO - create gid config so that the filenames in sh and c stay the same for gidpiping */
-  
-  std::string line;
+
+  std::string timeline;
+  std::string cmdline;
 
   while (1) {
     this_thread::sleep_for(chrono::seconds(POLL_INTERVAL));
 
     if(sig_caught==1) {
+
+      sig_caught=0;
+
       /* The data about the new thread should already be in the fd */
       /* very bad way to get this done */
       std::ifstream input( "/tmp/timer" );
@@ -60,23 +65,33 @@ int main() {
 	exit(-2);
       }
 
-      for(int i = 0; i < number_of_lines_read && getline(input, line); i++);
-      getline( input, line );
-      cout<<line<<endl;
-      
-      input.close();
-      int time_for_task=atoi(line.c_str());
+      cout<<"number of lines read: "<< number_of_lines_read<<endl;
+      for(int i = 0; i < number_of_lines_read && getline(input, timeline); i++);
 
-      /* 0 timer tasks shouldn't be passed to the gid server. we will simply ignore it*/
-      if(time_for_task > 0) {
+      /* time get */
+      getline(input, timeline);
+      if(timeline=="")
+	cout<<"skipping time<=0 request"<<endl;
+      else
+	number_of_lines_read++;
+
+      int time_for_task=atoi(timeline.c_str());
+      /* todo; special case 0? */
+
+      /* cmd get */
+      getline(input, cmdline);
+      if(cmdline=="") {
+	cout<<"skipping cmdline=empty request"<<endl;
+      }
+      else {
 	++tid;
-	m[tid]=std::thread(timeout, time_for_task, tid);
-	sig_caught=0;
-	++number_of_lines_read;
+	m[tid]=std::thread(timeout, time_for_task, tid, cmdline);
+	number_of_lines_read++;
       }
 
+      input.close();
     }
-    
+
     theLock.lock();
 
     if (t.size() > 0) {
