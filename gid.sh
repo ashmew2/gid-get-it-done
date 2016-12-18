@@ -113,6 +113,23 @@ function tda {
 	return 0
     }
 
+    [[ $1 = --search ]] && {
+	SEARCH_USAGE='USAGE: tda --search word1 [word2] [word3] ...'
+
+	[[ -z $2 ]] && echo "$SEARCH_USAGE" && return 1
+
+	searchstring=''
+	for i in $*; do
+	    searchstring="${searchstring}|${i}"
+	done
+
+	searchstring=${searchstring#|--search|}
+
+	grep --color=always -E -i $searchstring $GID_TODO_FILE
+
+	return 0
+    }
+
     [[ $1 = --usage ]] && {
 	echo -e "\tExample usage:"
 	echo -e "\t--------------"
@@ -124,6 +141,7 @@ function tda {
 	echo -e "\ttda --show  : Show your todo list"
 	echo -e "\ttda --usage : Print this message and exit"
 	echo -e "\ttda --file  : Print the full path to todo file"
+	echo -e "\ttda --search word1 [word2] ... : Search for all words in TODO file"
 	echo -e "\ttda --timer [seconds]: Sleep for numseconds and notify parent terminal."
 	echo -e "\ttdr         : Reload the gid.sh script"
 	echo -e "\ttdre        : Review and sort your todo list"
@@ -159,3 +177,5 @@ function tda {
 #TODO - Add network sync to keep safe with buffering.
 #TODO - Fix the naming scheme of all binaries, maybe tdreload is better than tdr as we can have tdremove and tdedit as well in that case
 #TODO - Add a tda --expire <DATE-TIME> to set a reminder which expires in the future. --timer and --expire (or renamed) should have a common core.
+#TODO - Follow code conventions, reeplace all $x -> ${x} (and consistent) (use regex)
+#TODO: define multiple levels of THRESHOLD REVIEW advice to help the user control abuse of this todo man
