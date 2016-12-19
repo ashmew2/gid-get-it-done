@@ -52,19 +52,19 @@ function tdre {
 
     for item in "${todo_file[@]}"; do
 
-	echo $item
+        echo $item
 
-	impbool=y
-	read -n 1 -p "Important? [ [yY]: Yes; [dD]: Delete; [Any other key]: No ]: " impbool
-	
-	if [[ "$impbool" == "y" || "$impbool" == "Y" ]]; then
-	    echo "$item" >> $IMP_FILE
-	elif [[ "$impbool" != "d" && "$impbool" != "D" ]]; then
-	    echo "$item" >> $OTHER_FILE
-	fi
+        impbool=y
+        read -n 1 -p "Important? [ [yY]: Yes; [dD]: Delete; [Any other key]: No ]: " impbool
 
-	echo
-	echo
+        if [[ "$impbool" == "y" || "$impbool" == "Y" ]]; then
+            echo "$item" >> $IMP_FILE
+        elif [[ "$impbool" != "d" && "$impbool" != "D" ]]; then
+            echo "$item" >> $OTHER_FILE
+        fi
+
+        echo
+        echo
     done
 
     cat $IMP_FILE $OTHER_FILE >> $GID_TODO_FILE.new.tmp
@@ -79,86 +79,86 @@ function tdre {
     rm -f $OTHER_FILE
     rm -f $NEW_FILE
 
-    # TODO: Delete the backup here? Probably leave it around for $AGE..
+    # TODO - Delete the backup here? Probably leave it around for $AGE..
 }
 
 function tda {
 
     # make sure we have some args.
     if [[ $# -eq 0 ]]; then
-          #echo -e "${CYAN}No task mentioned to be added. (Ex: tda *task to be added*)${NC}"
-          return 0
+        #echo -e "${CYAN}No task mentioned to be added. (Ex: tda *task to be added*)${NC}"
+        return 0
     fi
 
     # Handle args
 
-    # TODO: Do we need a proper timing service?
-    # TODO: Enable script execution after timer expires.
+    # TODO - Do we need a proper timing service?
+    # TODO - Enable script execution after timer expires.
 
     [[ $1 = --timer ]]  &&  {
-	
-	if [[ $2 == "" ]]; then
-	    timeout=$DEFAULT_TIMEOUT
-	else
-	    timeout=$2
-	fi
 
-	sleep $timeout && echo "Timer Expired for $timeout second(s)." &
-	# >> $(ls -l /proc/$$/fd/1 | awk '{print $NF}') &
+        if [[ $2 == "" ]]; then
+            timeout=$DEFAULT_TIMEOUT
+        else
+            timeout=$2
+        fi
 
-	return 0
+        sleep $timeout && echo "Timer Expired for $timeout second(s)." &
+        # >> $(ls -l /proc/$$/fd/1 | awk '{print $NF}') &
+
+        return 0
     }
 
     [[ $1 = --file ]] && {
-	echo $GID_TODO_FILE
-	return 0
+        echo $GID_TODO_FILE
+        return 0
     }
 
     [[ $1 = --show ]] && {
-	num=0
-	while read -r; do
-	    echo -e "====\n#${num}:\n===="
-	    echo $REPLY
-	    num=$(expr $num + 1)
-	done < $GID_TODO_FILE | less
-	return 0
+        num=0
+        while read -r; do
+            echo -e "====\n#${num}:\n===="
+            echo $REPLY
+            num=$(expr $num + 1)
+        done < $GID_TODO_FILE | less
+        return 0
     }
 
     [[ $1 = --search ]] && {
-	SEARCH_USAGE='USAGE: tda --search word1 [word2] [word3] ...'
+        SEARCH_USAGE='USAGE: tda --search word1 [word2] [word3] ...'
 
-	[[ -z $2 ]] && echo "$SEARCH_USAGE" && return 1
+        [[ -z $2 ]] && echo "$SEARCH_USAGE" && return 1
 
-	searchstring=''
-	for i in $*; do
-	    searchstring="${searchstring}|${i}"
-	done
+        searchstring=''
+        for i in $*; do
+            searchstring="${searchstring}|${i}"
+        done
 
-	searchstring=${searchstring#|--search|}
+        searchstring=${searchstring#|--search|}
 
-	grep --color=always -E -i $searchstring $GID_TODO_FILE
+        grep --color=always -E -i $searchstring $GID_TODO_FILE
 
-	return 0
+        return 0
     }
 
     [[ $1 = --usage ]] && {
-	echo -e "\tExample usage:"
-	echo -e "\t--------------"
-	echo -e "\t\t$ tda Go to the grocery store at 13:00"
-	echo -e "\t\t$ tda Book a table for my date."
-	echo -e "\t\t$ tda fix memory corruption in the network stack"
-	echo -e "\t\t$ tda Conquer the world!"
-	echo -e "\t--------------"
-	echo -e "\ttda --show  : Show your todo list"
-	echo -e "\ttda --usage : Print this message and exit"
-	echo -e "\ttda --file  : Print the full path to todo file"
-	echo -e "\ttda --search word1 [word2] ... : Search for all words in TODO file"
-	echo -e "\ttda --timer [seconds]: Sleep for numseconds and notify parent terminal."
-	echo -e "\ttdr         : Reload the gid.sh script"
-	echo -e "\ttdre        : Review and sort your todo list"
-	echo -e "\t--------------"
+        echo -e "\tExample usage:"
+        echo -e "\t--------------"
+        echo -e "\t\t$ tda Go to the grocery store at 13:00"
+        echo -e "\t\t$ tda Book a table for my date."
+        echo -e "\t\t$ tda fix memory corruption in the network stack"
+        echo -e "\t\t$ tda Conquer the world!"
+        echo -e "\t--------------"
+        echo -e "\ttda --show  : Show your todo list"
+        echo -e "\ttda --usage : Print this message and exit"
+        echo -e "\ttda --file  : Print the full path to todo file"
+        echo -e "\ttda --search word1 [word2] ... : Search for all words in TODO file"
+        echo -e "\ttda --timer [seconds]: Sleep for numseconds and notify parent terminal."
+        echo -e "\ttdr         : Reload the gid.sh script"
+        echo -e "\ttdre        : Review and sort your todo list"
+        echo -e "\t--------------"
 
-	return 0
+        return 0
     }
 
     echo "$@" >> $GID_TODO_FILE
@@ -167,11 +167,11 @@ function tda {
     num_items=$(wc -l $GID_TODO_FILE | awk '{print $1}')
 
     if [[ $num_items -ge $REVIEW_THRESHOLD ]]; then
-	echo "[Warning] $num_items in TODO. Advice: tdre"
+        echo "[Warning] $num_items in TODO. Advice: tdre"
     fi
 
     if [ $BACKUP_FLAG -eq 1 ]; then
-	echo "$@" >> ${BACKUP_PREFIX}${GID_TODO_FILE}${BACKUP_SUFFIX}
+        echo "$@" >> ${BACKUP_PREFIX}${GID_TODO_FILE}${BACKUP_SUFFIX}
     fi
 }
 
@@ -181,4 +181,4 @@ function tda {
 #TODO - Fix the naming scheme of all binaries, maybe tdreload is better than tdr as we can have tdremove and tdedit as well in that case
 #TODO - Add a tda --expire <DATE-TIME> to set a reminder which expires in the future. --timer and --expire (or renamed) should have a common core.
 #TODO - Follow code conventions, reeplace all $x -> ${x} (and consistent) (use regex)
-#TODO: define multiple levels of THRESHOLD REVIEW advice to help the user control abuse of this todo man
+#TODO - define multiple levels of THRESHOLD REVIEW advice to help the user control abuse of this todo man
