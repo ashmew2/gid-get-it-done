@@ -55,13 +55,16 @@ function tdre {
 	echo $item
 
 	impbool=y
-	read -p "Important? [ [yY]: Yes; [dD]: Delete; [Any other key]: No ]: " impbool
-
+	read -n 1 -p "Important? [ [yY]: Yes; [dD]: Delete; [Any other key]: No ]: " impbool
+	
 	if [[ "$impbool" == "y" || "$impbool" == "Y" ]]; then
 	    echo "$item" >> $IMP_FILE
 	elif [[ "$impbool" != "d" && "$impbool" != "D" ]]; then
 	    echo "$item" >> $OTHER_FILE
 	fi
+
+	echo
+	echo
     done
 
     cat $IMP_FILE $OTHER_FILE >> $GID_TODO_FILE.new.tmp
