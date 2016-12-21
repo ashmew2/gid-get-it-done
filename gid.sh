@@ -103,9 +103,14 @@ function tda {
             timeout=$2
         fi
 
-        sleep $timeout && echo "Timer Expired for $timeout second(s)." &
-        # >> $(ls -l /proc/$$/fd/1 | awk '{print $NF}') &
+#        sleep $timeout && echo "Timer Expired for $timeout second(s)." &
 
+        echo $timeout >> /tmp/timer
+        echo date >> /tmp/timer
+#        echo "Timer Expired for $timeout second(s)." >> /tmp/timer
+        kill -USR1 $(pgrep gidserver)
+
+        # >> $(ls -l /proc/$$/fd/1 | awk '{print $NF}') &
         return 0
     }
 
@@ -170,8 +175,13 @@ function tda {
         echo "[Warning] $num_items in TODO. Advice: tdre"
     fi
 
-    if [ $BACKUP_FLAG -eq 1 ]; then
+    if [[ $BACKUP_FLAG -eq 1 ]]; then
         echo "$@" >> ${BACKUP_PREFIX}${GID_TODO_FILE}${BACKUP_SUFFIX}
+    fi
+
+    # Mess with the user.
+    if [[ "$1" =~ "tda" ]]; then
+        echo "$(whoami) $(whoami) ;-)"
     fi
 }
 
