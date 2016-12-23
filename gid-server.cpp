@@ -83,6 +83,8 @@ void handle_sighup(int signum) {
   getline(conf, filepath);
 
   GID_PIPE_FILE=filepath;
+
+  conf.close();
 }
 
 void handle_sigusr1(int signum) {
@@ -138,6 +140,7 @@ int main() {
 
       /* cmd get */
       getline(input, cmdline);
+      input.close();
 
       if(cmdline.length() == 0)
         continue;
@@ -145,8 +148,6 @@ int main() {
       number_of_lines_read++;
       ++tid;
       m[tid]=std::thread(timeout, time_for_task, tid, cmdline);
-
-      input.close();
     }
 
     theLock.lock();
