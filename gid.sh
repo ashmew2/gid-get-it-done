@@ -95,7 +95,37 @@ function tda {
     # TODO - Do we need a proper timing service?
     # TODO - Enable script execution after timer expires.
 
-    [[ $1 = --timer ]]  &&  {
+    # tda --timer 120 ./echo-check-noodles.sh
+
+    [[ $1 == --timer ]]  &&  {
+
+        # We let the user get away with just the timeout and sound the alarm on timer expiry [gidserver].
+        if [[ $# -lt 2 ]]; then
+            echo "[ERROR]: Usage: tda --timer <timeout> [<cmd>]"
+            return 1
+        fi
+
+        if [[ -z $(pgrep gidserver) ]]; then
+            echo "Cannot set timer. Reason: GID server is not running."
+            return 1
+        fi
+
+        # Drop the --timer from $@
+        shift
+
+        # gid server should cope with bad clients who send alpha strings as timeout.
+        # We are using the timeout<space>command format.
+        echo "$@" >> /tmp/timer
+        kill -USR1 $(pgrep gidserver)
+        return 0
+    }
+
+    [[ $1 = --adb-pull ]]  &&  {
+
+        # Using the default file if unspecified.
+        # TODO: Grab this from the gid conf file instead.
+        DEFAULT_ANDROID_FILEPATH='/storage/sdcard1/todo.txt'
+        LOCAL_FILEPATH=""
 
         if [[ $2 == "" ]]; then
             timeout=$DEFAULT_TIMEOUT
@@ -113,6 +143,7 @@ function tda {
         # >> $(ls -l /proc/$$/fd/1 | awk '{print $NF}') &
         return 0
     }
+
 
     [[ $1 = --file ]] && {
         echo $GID_TODO_FILE
@@ -155,10 +186,12 @@ function tda {
         echo -e "\t\t$ tda Conquer the world!"
         echo -e "\t--------------"
         echo -e "\ttda --show  : Show your todo list"
+        echo -e "\ttda --adb-pull <ANDROID_FILEPATH> : Pull ANDROID file from an android device"
+        echo -e "\ttda --adb-push <LOCAL_FILEPATH> : Push LOCAL file to an android device"
         echo -e "\ttda --usage : Print this message and exit"
         echo -e "\ttda --file  : Print the full path to todo file"
         echo -e "\ttda --search word1 [word2] ... : Search for all words in TODO file"
-        echo -e "\ttda --timer [seconds]: Sleep for numseconds and notify parent terminal."
+        echo -e "\ttda --timer [seconds] <cmd> : Sleep for numseconds and execute <cmd>."
         echo -e "\ttdr         : Reload the gid.sh script"
         echo -e "\ttdre        : Review and sort your todo list"
         echo -e "\t--------------"
