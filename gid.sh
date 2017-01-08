@@ -121,29 +121,12 @@ function tda {
     }
 
     [[ $1 = --adb-pull ]]  &&  {
-
-        # Using the default file if unspecified.
-        # TODO: Grab this from the gid conf file instead.
-        DEFAULT_ANDROID_FILEPATH='/storage/sdcard1/todo.txt'
-        LOCAL_FILEPATH=""
-
-        if [[ $2 == "" ]]; then
-            timeout=$DEFAULT_TIMEOUT
-        else
-            timeout=$2
-        fi
-
-#        sleep $timeout && echo "Timer Expired for $timeout second(s)." &
-
-        echo $timeout >> /tmp/timer
-        echo date >> /tmp/timer
-#        echo "Timer Expired for $timeout second(s)." >> /tmp/timer
-        kill -USR1 $(pgrep gidserver)
-
-        # >> $(ls -l /proc/$$/fd/1 | awk '{print $NF}') &
-        return 0
+        # TODO: Guess what's missing here
     }
 
+    [[ $1 = --adb-push ]]  &&  {
+        # TODO: Guess what's missing here
+    }
 
     [[ $1 = --file ]] && {
         echo $GID_TODO_FILE
