@@ -11,9 +11,14 @@ read -p "Enter the install dir [Press enter for: $default_install_dir]" install_
 base_dir=$(dirname $BASH_SOURCE)
 
 # BASHRC is set to the relevant file. It is bash_profile for darwin machines.
-BASHRC=$HOME/.bashrc
 uname -a | grep -i darwin &> /dev/null
-[[ $? -eq 0 ]] && BASHRC=$HOME/.bash_profile
+if [[ $? -eq 0 ]]; then
+    BASHRC=$HOME/.bash_profile
+    DATE="$(date -u)"
+else
+    BASHRC=$HOME/.bashrc
+    DATE="$(date --utc)"
+fi
 
 # The files.
 todo_file=$install_dir/mytodo.gid
@@ -37,7 +42,7 @@ grep "## Automatically added by gid installer" $BASHRC &>/dev/null
 [[ $? -ne 0 ]] && {
 
     echo >> $BASHRC
-    echo "## Automatically added by gid installer at $(date --utc)" >> $BASHRC
+    echo "## Automatically added by gid installer at $DATE" >> $BASHRC
     echo "source $installed_file" >> $BASHRC
 }
 
@@ -48,7 +53,7 @@ grep "alias tdr=" $BASHRC &>/dev/null
 
     ## Set an alias in $BASHRC to do the source as we can't do it for our parent (why not?)
     echo >> $BASHRC
-    echo "## reload todoman with this alias (Added : $(date --utc))" >> $BASHRC
+    echo "## reload todoman with this alias (Added : $DATE)" >> $BASHRC
     echo "alias tdr='source $installed_file'" >> $BASHRC
 }
 
