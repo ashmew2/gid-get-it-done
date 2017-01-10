@@ -11,8 +11,7 @@ read -p "Enter the install dir [Press enter for: $default_install_dir]" install_
 base_dir=$(dirname $BASH_SOURCE)
 
 # BASHRC is set to the relevant file. It is bash_profile for darwin machines.
-uname -a | grep -i darwin &> /dev/null
-if [[ $? -eq 0 ]]; then
+if [[ $(uname -s) != Linux ]]; then
     BASHRC=$HOME/.bash_profile
     DATE="$(date -u)"
 else
