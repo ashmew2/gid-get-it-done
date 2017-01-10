@@ -120,11 +120,13 @@ function tda {
         return 0
     }
 
-    [[ $1 = --adb-pull ]]  &&  {
+    [[ $1 == --adb-pull ]]  &&  {
+        echo "Call adb-pull.sh"
         # TODO: Guess what's missing here
     }
 
-    [[ $1 = --adb-push ]]  &&  {
+    [[ $1 == --adb-push ]]  &&  {
+        echo "Call adb-push.sh"
         # TODO: Guess what's missing here
     }
 
