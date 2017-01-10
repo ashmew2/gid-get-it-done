@@ -10,7 +10,11 @@ read -p "Enter the install dir [Press enter for: $default_install_dir]" install_
 
 base_dir=$(dirname $BASH_SOURCE)
 
-# BASHRC is set to the relevant file. It is bash_profile for darwin machines.
+# BASHRC is set to the relevant file which is sourced at bash start up.
+# It is .bash_profile for darwin machines.
+# It is .bashrc for Linux machines.
+# Of course this is usual convention, but if you hacked your shell,
+# you can hack this script ;-)
 if [[ $(uname -s) != Linux ]]; then
     BASHRC=$HOME/.bash_profile
     DATE="$(date -u)"
@@ -18,6 +22,9 @@ else
     BASHRC=$HOME/.bashrc
     DATE="$(date --utc)"
 fi
+
+# The program used to sound alarms
+SOUNDPROGRAM=mpg123
 
 # The files.
 todo_file=$install_dir/mytodo.gid
@@ -66,4 +73,13 @@ echo -e "The todo file is at $todo_file\n\n"
 tda --usage
 
 echo -e "\ntda and friends will be in all new shells. Enjoy."
+
+# Inform user if the alarm sounding program is missing
+which $SOUNDPROGRAM > /dev/null 2>&1
+[[ $? -ne 0 ]] && {
+    echo -e "\nWARNING: You do not have $SOUNDPROGRAM in your PATH (possibly, it isnt installed)"
+    echo -e "\tYou wont be able to sound alarms with tda --timer 10 alarm"
+    echo -e "\tRefer to the gid README for help."
+}
+
 ## GoodBye!
