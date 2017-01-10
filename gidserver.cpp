@@ -98,7 +98,7 @@ void handle_sighup(int signum) {
     ifstream conf("$HOME/gid/gidserver.conf");
     std::string filepath;
 
-    if(conf == NULL)
+    if(!conf)
         return;
 
     getline(conf, filepath);
@@ -232,7 +232,7 @@ int main() {
 
         /* very bad way to get this done */
         std::ifstream input(GID_PIPE_FILE);
-        if (input == NULL) {
+        if (!input) {
           cout << "[ERROR] Can't open GID_PIPE_FILE: " << GID_PIPE_FILE << endl;
           exit(-2);
         }
