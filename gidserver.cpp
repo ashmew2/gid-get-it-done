@@ -20,14 +20,12 @@
 #include <sys/types.h>
 #include <arpa/inet.h>
 
-using namespace std;
-
 static volatile sig_atomic_t sigusr1_caught = 0;
 static volatile sig_atomic_t sigusr2_caught = 0;
 
-static mutex theLock;
-vector<int> t;
-map<int, std::thread> m;
+static std::mutex theLock;
+std::vector<int> t;
+std::map<int, std::thread> m;
 
 /* TODO: REplace with unix socket */
 std::string GID_PIPE_FILE="/tmp/timer";
@@ -39,10 +37,10 @@ bool tcplistener_running;
 /* TODO: Implement warn(), error(), log(), debug() and supress output (and code?) in production builds */
 
 /* TODO: What happens if gidserver tries to execute gidserver? ;) */
-std::string exec_cmd(string cmd) {
+std::string exec_cmd(std::string cmd) {
     char buffer[128];
-    string result="";
-    string f;
+    std::string result="";
+    std::string f;
 
     std::shared_ptr<FILE> pipe(popen(cmd.c_str(), "r"), pclose);
 
@@ -51,7 +49,7 @@ std::string exec_cmd(string cmd) {
     while (!feof(pipe.get())) {
         if (fgets(buffer, 128, pipe.get()) != NULL) {
             result += buffer;
-            cout << buffer;
+            std::cout << buffer;
             }
     }
 
@@ -83,17 +81,17 @@ std::string execute_if_sane(std::string cmd_to_execute) {
     }
 }
 
-void timeout(int time_in_sex, int thread_id, string cmd_to_execute) {
+void timeout(int time_in_sex, int thread_id, std::string cmd_to_execute) {
 
-    cout << "T[" << thread_id << "]: Sleep for : " << time_in_sex << " seconds and execute : " << cmd_to_execute << endl;
-    this_thread::sleep_for(chrono::seconds(time_in_sex));
+    std::cout << "T[" << thread_id << "]: Sleep for : " << time_in_sex << " seconds and execute : " << cmd_to_execute << std::endl;
+    std::this_thread::sleep_for(std::chrono::seconds(time_in_sex));
 
     // Do what we want to do here, like play an alarm or trigger the phone
     // Or call the phone. Each thread should have a final purpose that gid.sh set for it
     // using USR1
 
-    cout << "T[" << thread_id << "] Executing command:" << cmd_to_execute << endl;
-    cout << "T[" << thread_id << "] result is : " << execute_if_sane(cmd_to_execute) << endl;
+    std::cout << "T[" << thread_id << "] Executing command:" << cmd_to_execute << std::endl;
+    std::cout << "T[" << thread_id << "] result is : " << execute_if_sane(cmd_to_execute) << std::endl;
 
     theLock.lock();
     t.push_back(thread_id);
@@ -106,7 +104,7 @@ void handle_sighup(int signum) {
 
     /* TODO - gidserver.conf should be placed inside ~/.gid (decided at install time) */
 
-    ifstream conf("$HOME/gid/gidserver.conf");
+    std::ifstream conf("$HOME/gid/gidserver.conf");
     std::string filepath;
 
     if(!conf)
@@ -153,7 +151,7 @@ void tcp_server_process(int conn_backlog) {
     listenfd=socket(AF_INET, SOCK_STREAM, 0);
 
     if(listenfd < 0) {
-    cout << "Could not get a socket. Aborting.";
+    std::cout << "Could not get a socket. Aborting.";
     exit(1);
     }
 
@@ -167,23 +165,23 @@ void tcp_server_process(int conn_backlog) {
     //listenaddr.sin_addr.s_addr = (127 << 24) + (0 << 16) + (0 << 8) + (1 << 0);
 
     if(bind(listenfd, (struct sockaddr *) &listenaddr, sizeof(struct sockaddr_in)) < 0) {
-      cout << "bind failed. Going down..." << endl;
+      std::cout << "bind failed. Going down..." << std::endl;
       exit(2);
     }
 
     if(listen(listenfd, 1) < 0) {
-      cout << "listen failed. Bailing out.." << endl;
+      std::cout << "listen failed. Bailing out.." << std::endl;
       exit(3);
     }
 
-    cout << "Now accepting connections on " << LISTEN_PORT << endl;
+    std::cout << "Now accepting connections on " << LISTEN_PORT << std::endl;
 
     struct sockaddr_in clientaddr;
     socklen_t clientaddr_size = sizeof(struct sockaddr_in);
     int clientfd = accept(listenfd, (struct sockaddr *) &clientaddr, &clientaddr_size);
 
     if(clientfd < 0) {
-      cout << "screwed up with accept()...dying.." << endl;
+      std::cout << "screwed up with accept()...dying.." << std::endl;
       exit(4);
     }
 
@@ -194,16 +192,16 @@ void tcp_server_process(int conn_backlog) {
 
     /* TODO: Fix this -Wsign-compare warning to shut up gcc ;-) */
     if(bytes_sent < msg_hello_client.length()) {
-      cout << "send() is not reliable...dying.." << endl;
+      std::cout << "send() is not reliable...dying.." << std::endl;
       exit(5);
     }
 
-    cout << "Going down with the ship. Goodbye, Your Captain" << endl;
+    std::cout << "Going down with the ship. Goodbye, Your Captain" << std::endl;
 
     theLock.lock();
     /* TODO: Also set this to  false when killing tcp server. */
     tcplistener_running = false;
-    cout << "Set listener to false!" << endl;
+    std::cout << "Set listener to false!" << std::endl;
     theLock.unlock();
 }
 
@@ -231,7 +229,7 @@ int main() {
 
     /* TODO: Remove this infinite loop */
     while (1) {
-      this_thread::sleep_for(chrono::seconds(POLL_INTERVAL));
+      std::this_thread::sleep_for(std::chrono::seconds(POLL_INTERVAL));
 
       /* TODO - add a counter for ignoring client file if clients misbehaves */
       if(sigusr1_caught == 1) {
@@ -244,27 +242,27 @@ int main() {
         /* very bad way to get this done */
         std::ifstream input(GID_PIPE_FILE);
         if (!input) {
-          cout << "[ERROR] Can't open GID_PIPE_FILE: " << GID_PIPE_FILE << endl;
+          std::cout << "[ERROR] Can't open GID_PIPE_FILE: " << GID_PIPE_FILE << std::endl;
           exit(-2);
         }
 
-        /* cout << "number of lines read: " << number_of_lines_read << endl; */
+        /* std::cout << "number of lines read: " << number_of_lines_read << std::endl; */
         for(int i = 0; i < number_of_lines_read && getline(input, inputline); i++);
 
         /* time and cmd get */
         getline(input, inputline);
 
         if(inputline.length() == 0) {
-          cout << "[WARNING]: SIGUSR1 received but no lines to read." << endl;
+          std::cout << "[WARNING]: SIGUSR1 received but no lines to read." << std::endl;
           continue;
         }
 
         number_of_lines_read++;
         end_of_timeout = inputline.find(" ");
 
-        if(end_of_timeout == string::npos) {
+        if(end_of_timeout == std::string::npos) {
             /* No proper timeout = whine and bail */
-            cout << "[WARNING]: Failed to parse line : " << inputline << endl;
+            std::cout << "[WARNING]: Failed to parse line : " << inputline << std::endl;
             continue;
         }
         else {
@@ -275,7 +273,7 @@ int main() {
                     break;
 
             if(i!=end_of_timeout) {
-                cout << "[WARNING]: Failed to parse line : " << inputline << endl;
+                std::cout << "[WARNING]: Failed to parse line : " << inputline << std::endl;
                 continue;
             }
             else {
@@ -286,14 +284,14 @@ int main() {
 
         /* Hold onto our socks if we missed something earlier (like negative times) */
         if(str_timeout == "" || str_cmd == "" || str_timeout[0] == '-') {
-            cout << "[WARNING]: Failed to parse line : " << inputline << endl;
+            std::cout << "[WARNING]: Failed to parse line : " << inputline << std::endl;
             continue;
             /* TODO: Curse the client who put this damn line into our input feed */
         }
 
         /* All set now */
         int time_for_task = atoi(str_timeout.c_str());
-        cout << "Creating thread." << endl;
+        std::cout << "Creating thread." << std::endl;
         ++tid;
         m[tid]=std::thread(timeout, time_for_task, tid, str_cmd);
       }
@@ -301,7 +299,7 @@ int main() {
       theLock.lock();
       if(t.size() > 0) {
         m[t[0]].join();
-        cout << "T[" << t[0] << "]: Reaped (and sent to hell)" << endl;
+        std::cout << "T[" << t[0] << "]: Reaped (and sent to hell)" << std::endl;
         m.erase(t[0]);
         t.erase(t.begin());
       }
@@ -310,7 +308,7 @@ int main() {
 
       theLock.lock();
       if(tcplistener_running != true) {
-        cout << "The TCP Server has died. Reaping (and sending it to Hell)";
+        std::cout << "The TCP Server has died. Reaping (and sending it to Hell)";
         thread_tcp_listener.join();
         tcplistener_running = true; /* BAD HACK, cant restart! TODO: */
       }
