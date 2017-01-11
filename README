@@ -1,4 +1,32 @@
-The No BS Todo Man.
+The No BS TodoMan
+-----------------
+
+Building GID Server
+-------------------
+
+    $ g++ gidserver.cpp -std=c++11 -Wall -lpthread -o gidserver
+
+RUNNING GID SERVER
+------------------
+
+    $ ./gidserver &
+
+After this, executing:
+    $ tda --timer 10
+
+will set a timer for 10 seconds and sound the alarm.
+
+ABOUT GID SERVER
+----------------
+
+The gid server is at the center of gid and takes care of :
+    -   Handle calls to tda --timer
+    -   Listen to TCP based requests for delayed execution
+    (Basically, executes a command after waiting for a designated time period)
+
+
+GENERAL INFORMATION FOR GID
+---------------------------
 
 Run the installer or read gid.sh for how it works.
 Check tda --usage.
@@ -29,4 +57,3 @@ $ tda --timer 30 play SweetChildOMine.mp3
 ---
 Feedback is appreciated.
 Github or email: ashmew2 at gmail d0t c0m
-
