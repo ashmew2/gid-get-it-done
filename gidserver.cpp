@@ -214,6 +214,53 @@ void tcp_server_process(int conn_backlog) {
     theLock.unlock();
 }
 
+/* Our format is : <timeout><space><commands><;> */
+bool parse_time_cmd(std::string& inputline, std::string& timeoutstr, std::string& cmdstr) {
+
+  /* Ensure only empty timeoutstr and cmdstr are passed so that we parse and fill them */
+  if(timeoutstr != "" || cmdstr != "")
+    return false;
+
+  /* Stick to inputline format */
+  if(inputline == "" || inputline[inputline.length() - 1] != ';')
+    return false;
+
+  size_t end_of_timeout = inputline.find(" ");
+
+  if(end_of_timeout == std::string::npos) {
+    /* No proper timeout = whine and bail */
+    std::cout << "[WARNING]: Failed to parse line : " << inputline << std::endl;
+    return false;
+  }
+  else {
+    /* Make sure that all digits till space are numbers */
+    size_t i;
+    for(i = 0; i < end_of_timeout; i++)
+      if(!isdigit(inputline[i]))
+        break;
+
+    if(i!=end_of_timeout) {
+      std::cout << "[WARNING]: Failed to parse line : " << inputline << std::endl;
+      return false;
+    }
+    else {
+      timeoutstr = inputline.substr(0, end_of_timeout);
+      cmdstr = inputline.substr(end_of_timeout+1);
+      cmdstr.erase(cmdstr.end()-1);
+    }
+  }
+
+  /* Hold onto our socks if we missed something earlier (like negative times) */
+  if(timeoutstr == "" || cmdstr == "" || timeoutstr[0] == '-') {
+    std::cout << "[WARNING]: Failed to parse line : " << inputline << std::endl;
+    return false;
+
+    /* TODO: Curse the client who put this damn line into our input feed */
+  }
+
+  return true;
+}
+
 /* TODO: Replace communication with a nixock instead */
 int main() {
 
@@ -234,7 +281,6 @@ int main() {
 
     std::string inputline;
     std::string str_timeout="", str_cmd="";
-    size_t end_of_timeout;
 
     /* TODO: Remove this infinite loop */
     while (1) {
@@ -267,42 +313,17 @@ int main() {
         }
 
         number_of_lines_read++;
-        end_of_timeout = inputline.find(" ");
 
-        if(end_of_timeout == std::string::npos) {
-            /* No proper timeout = whine and bail */
-            std::cout << "[WARNING]: Failed to parse line : " << inputline << std::endl;
-            continue;
+        if(parse_time_cmd(inputline, str_timeout, str_cmd) == true) {
+
+          int time_for_task = atoi(str_timeout.c_str());
+          std::cout << "Creating thread." << std::endl;
+          ++tid;
+          m[tid]=std::thread(timeout, time_for_task, tid, str_cmd);
         }
         else {
-            /* Make sure that all digits till space are numbers */
-            size_t i;
-            for(i = 0; i < end_of_timeout; i++)
-                if(!isdigit(inputline[i]))
-                    break;
-
-            if(i!=end_of_timeout) {
-                std::cout << "[WARNING]: Failed to parse line : " << inputline << std::endl;
-                continue;
-            }
-            else {
-                str_timeout = inputline.substr(0, end_of_timeout);
-                str_cmd = inputline.substr(end_of_timeout+1);
-            }
+          std::cout << "Failed to parse : " << inputline << std::endl;
         }
-
-        /* Hold onto our socks if we missed something earlier (like negative times) */
-        if(str_timeout == "" || str_cmd == "" || str_timeout[0] == '-') {
-            std::cout << "[WARNING]: Failed to parse line : " << inputline << std::endl;
-            continue;
-            /* TODO: Curse the client who put this damn line into our input feed */
-        }
-
-        /* All set now */
-        int time_for_task = atoi(str_timeout.c_str());
-        std::cout << "Creating thread." << std::endl;
-        ++tid;
-        m[tid]=std::thread(timeout, time_for_task, tid, str_cmd);
       }
 
       theLock.lock();
