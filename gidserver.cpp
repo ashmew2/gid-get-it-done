@@ -1,4 +1,4 @@
-#include <iostream>
+ #include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <chrono>
@@ -27,7 +27,7 @@ static std::mutex theLock;
 std::vector<int> t;
 std::map<int, std::thread> m;
 
-/* TODO: REplace with unix socket */
+/* TODO: Replace with unix socket */
 std::string GID_PIPE_FILE="/tmp/timer";
 int LISTEN_PORT = 42000;
 bool tcplistener_running;
@@ -178,25 +178,34 @@ void tcp_server_process(int conn_backlog) {
 
     struct sockaddr_in clientaddr;
     socklen_t clientaddr_size = sizeof(struct sockaddr_in);
-    int clientfd = accept(listenfd, (struct sockaddr *) &clientaddr, &clientaddr_size);
 
-    if(clientfd < 0) {
-      std::cout << "screwed up with accept()...dying.." << std::endl;
-      exit(4);
+    int failures = 0;
+    while(true) {
+
+      /* TODO: Set soft and hard client limits to prevent being flooded */
+      int clientfd = accept(listenfd, (struct sockaddr *) &clientaddr, &clientaddr_size);
+
+      if(clientfd < 0) {
+        failures += 1;
+
+        if(failures >= 10) {
+          std::cout << "Too many failures with accept() returning bogus FDs. Going down." << std::endl;
+          exit(4);
+        }
+      }
+
+      /* Valid clientfd here */
+      /* Enable a simple hello cipher here : TODO */
+      char msgbuf[40];
+      ssize_t bytes_received = recv(clientfd, msgbuf, sizeof(msgbuf), 0);
+
+      if(bytes_received < 0)
+        std::cout << "Error with recv(). " << std::endl;
+      else
+        std::cout << "Client sent: " << msgbuf << std::endl;
     }
 
-    std::string msg_hello_client = "Your journey begins here.\n";
-
-    /* Enable a simple hello cipher here : TODO */
-    ssize_t bytes_sent = send(clientfd, msg_hello_client.c_str(), msg_hello_client.length(), 0);
-
-    /* TODO: Fix this -Wsign-compare warning to shut up gcc ;-) */
-    if(bytes_sent < msg_hello_client.length()) {
-      std::cout << "send() is not reliable...dying.." << std::endl;
-      exit(5);
-    }
-
-    std::cout << "Going down with the ship. Goodbye, Your Captain" << std::endl;
+    /* TODO: Fix -Wsign-compare warnings to shut up gcc for good ;-) */
 
     theLock.lock();
     /* TODO: Also set this to  false when killing tcp server. */
