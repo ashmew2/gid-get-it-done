@@ -16,6 +16,10 @@ RANDOM NOTES:
 =============
 Linux GUI client which just gets shit done with gid.
 
+UDP based server/clients for one-shot non-persistent requests
+
+Authentication of clients with the server
+
 adb-pull and adb-push should be a part of the next major release as it does not
 fit in well with the scope above (for now)
 As those scripts already exist, those can be git rm --cached -> stashed and then

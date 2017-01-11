@@ -1,18 +1,17 @@
- #include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <chrono>
 #include <iostream>
 #include <mutex>
 #include <thread>
-#include <signal.h>
 #include <vector>
 #include <map>
-#include <unistd.h>
 #include <fstream>
 
 #include <cstring>
 #include <cstdlib>
+#include <unistd.h>
+#include <signal.h>
 
 /* Berkeley */
 #include <sys/socket.h>
@@ -37,6 +36,8 @@ bool tcplistener_running;
 /* TODO: Implement warn(), error(), log(), debug() and supress output (and code?) in production builds */
 
 /* TODO: What happens if gidserver tries to execute gidserver? ;) */
+/* TODO: exec_cmd does not seem to play nicely with mpg123 
+         (possibly, with some other interactive thingies as well) */
 std::string exec_cmd(std::string cmd) {
     char buffer[128];
     std::string result="";
@@ -96,7 +97,7 @@ void timeout(int time_in_sex, int thread_id, std::string cmd_to_execute) {
     theLock.lock();
     t.push_back(thread_id);
     theLock.unlock();
-    }
+}
 
 /* TODO - Check how the children handle these signals. Should we uninstall the signal handler for children threads? */
 
@@ -115,17 +116,16 @@ void handle_sighup(int signum) {
     GID_PIPE_FILE=filepath;
 
     conf.close();
-    }
+}
 
 void handle_sigusr1(int signum) {
 
     sigusr1_caught=1;
-    }
+}
 
 void handle_sigusr2(int signum) {
 
   sigusr2_caught=1;
-
 }
 
 void tcp_server_process(int conn_backlog) {
@@ -196,6 +196,7 @@ void tcp_server_process(int conn_backlog) {
 
       /* Valid clientfd here */
       /* Enable a simple hello cipher here : TODO */
+
       char msgbuf[40];
       ssize_t bytes_received = recv(clientfd, msgbuf, sizeof(msgbuf), 0);
 
@@ -214,13 +215,14 @@ void tcp_server_process(int conn_backlog) {
     theLock.unlock();
 }
 
-/* Our format is : <timeout><space><commands><;> */
+/* Our format for inputline is : <timeout><space><commands><;> */
 /* We guarantee that the timeoutstr and cmdstr are not modified if parsing fails */
 bool parse_time_cmd(std::string& inputline, std::string& timeoutstr, std::string& cmdstr) {
 
   /* Ensure only empty timeoutstr and cmdstr are passed so that we parse and fill them */
   if(timeoutstr != "" || cmdstr != "") {
-    std::cout << "[WARNING]: Failed to parse line : [E0] " << inputline << std::endl;
+    std::cout << "[WARNING]: Failed parse. timeoutstr and cmdstr: [E0]" << timeoutstr
+              << "; " << cmdstr << std::endl;
     return false;
   }
 

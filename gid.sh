@@ -115,7 +115,7 @@ function tda {
 
         # gid server should cope with bad clients who send alpha strings as timeout.
         # We are using the timeout<space>command format.
-        echo "$@" >> /tmp/timer
+        echo "$@;" >> /tmp/timer
         kill -USR1 $(pgrep gidserver)
         return 0
     }
