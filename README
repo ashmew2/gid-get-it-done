@@ -12,7 +12,7 @@ RUNNING GID SERVER
     $ ./gidserver
 
 After this, execute (from another terminal):
-    $ tda --timer 10
+    $ tda --timer 10 alarm
 
 will set a timer for 10 seconds and sound the alarm.
 
@@ -24,7 +24,23 @@ The gid server is at the center of gid and takes care of :
     -   Listen to TCP based requests for delayed execution
     (Basically, executes a command after waiting for a designated time period)
 
+NOTES for ALARMS
+----------------
+If you want to sound alarms, gid uses mpg123 (for now anyway), install it.
 
+on Debian based distros,
+   # apt-get install mpg123
+
+on a Gentoo machine,
+   # emerge mpg123
+
+on Redhat based distros,
+   # yum install mpg123
+
+on Darwin machines (OSX),
+   # possibly use homebrew, or suggest a better method than mpg123
+
+---------------------------
 GENERAL INFORMATION FOR GID
 ---------------------------
 
@@ -43,9 +59,9 @@ YOU HAVE BEEN DISCLAIMED:
 == If they aren't, consider submitting a patch via github (or email if you prefer anonymity/other reasons)
 
 COMMANDS
-========
+--------
+
 makemeasandwhich
-makesandwhich
 sudomakemeasandwhich
 adb-pull <ANDROID_FILENAME>
 adb-push <LOCAL_FILENAME>
@@ -57,3 +73,5 @@ $ tda --timer 30 play SweetChildOMine.mp3
 ---
 Feedback is appreciated.
 Github or email: ashmew2 at gmail d0t c0m
+
+---
