@@ -12,6 +12,7 @@
 #include <fstream>
 
 #include <cstring>
+#include <cstdlib>
 
 /* Berkeley */
 #include <sys/socket.h>
@@ -52,20 +53,30 @@ std::string exec_cmd(string cmd) {
             result += buffer;
             cout << buffer;
             }
-        }
+    }
 
     return result;
-    }
+}
 
 std::string execute_if_sane(std::string cmd_to_execute) {
-    if(cmd_to_execute=="adb-pull") {
+    if(cmd_to_execute == "adb-pull") {
       return exec_cmd("$HOME/gid/adb-pull.sh");
     }
-    else if(cmd_to_execute=="adb-push") {
+    else if(cmd_to_execute == "adb-push") {
       return exec_cmd("$HOME/gid/adb-push.sh");
     }
-    else if(cmd_to_execute=="date") {
-      return exec_cmd("date");
+
+    /*TODO: Possibly can be fixed, but here's the situation:
+            If we execute gidserver as ./gidserver& (aka in the background)
+            then the mpg123 execution from playalarm.sh blocks and puts gidserver
+            in a stopped state. After we do a fg %1 and wake it up, the alarm is
+            sounded. This can be fixed by running server as ./gidserver and use another
+            terminal to send the USR1 signals (or run tda --timer 1 alarm).
+    */
+
+    else if(cmd_to_execute == "alarm") {
+      system("$HOME/gid/playalarm.sh 2>/dev/null");
+      return "";
     }
     else {
         return "UNDEFINED (for now)";
