@@ -9,9 +9,9 @@ Building GID Server
 RUNNING GID SERVER
 ------------------
 
-    $ ./gidserver &
+    $ ./gidserver
 
-After this, executing:
+After this, execute (from another terminal):
     $ tda --timer 10
 
 will set a timer for 10 seconds and sound the alarm.
