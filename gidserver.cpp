@@ -215,21 +215,30 @@ void tcp_server_process(int conn_backlog) {
 }
 
 /* Our format is : <timeout><space><commands><;> */
+/* We guarantee that the timeoutstr and cmdstr are not modified if parsing fails */
 bool parse_time_cmd(std::string& inputline, std::string& timeoutstr, std::string& cmdstr) {
 
   /* Ensure only empty timeoutstr and cmdstr are passed so that we parse and fill them */
-  if(timeoutstr != "" || cmdstr != "")
+  if(timeoutstr != "" || cmdstr != "") {
+    std::cout << "[WARNING]: Failed to parse line : [E0] " << inputline << std::endl;
     return false;
+  }
 
   /* Stick to inputline format */
-  if(inputline == "" || inputline[inputline.length() - 1] != ';')
+  if(inputline == "" || inputline[inputline.length() - 1] != ';' ||
+     inputline[0] == '-') {
+
+    std::cout << "[WARNING]: Failed to parse line : [E1] " << inputline << std::endl;
     return false;
+  }
 
   size_t end_of_timeout = inputline.find(" ");
 
-  if(end_of_timeout == std::string::npos) {
+  if(end_of_timeout == std::string::npos || end_of_timeout == 0 ||
+     end_of_timeout == inputline.length() - 1) {
+
     /* No proper timeout = whine and bail */
-    std::cout << "[WARNING]: Failed to parse line : " << inputline << std::endl;
+    std::cout << "[WARNING]: Failed to parse line : [E2] " << inputline << std::endl;
     return false;
   }
   else {
@@ -240,7 +249,7 @@ bool parse_time_cmd(std::string& inputline, std::string& timeoutstr, std::string
         break;
 
     if(i!=end_of_timeout) {
-      std::cout << "[WARNING]: Failed to parse line : " << inputline << std::endl;
+      std::cout << "[WARNING]: Failed to parse line : [E3] " << inputline << std::endl;
       return false;
     }
     else {
@@ -250,13 +259,7 @@ bool parse_time_cmd(std::string& inputline, std::string& timeoutstr, std::string
     }
   }
 
-  /* Hold onto our socks if we missed something earlier (like negative times) */
-  if(timeoutstr == "" || cmdstr == "" || timeoutstr[0] == '-') {
-    std::cout << "[WARNING]: Failed to parse line : " << inputline << std::endl;
-    return false;
-
-    /* TODO: Curse the client who put this damn line into our input feed */
-  }
+  /* TODO: Curse the client who put this damn line into our input feed */
 
   return true;
 }
