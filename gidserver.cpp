@@ -23,7 +23,7 @@
 static volatile sig_atomic_t sigusr1_caught = 0;
 static volatile sig_atomic_t sigusr2_caught = 0;
 
-/*********** Global stuff we have right now for managing threads *****/
+/*********** Global management stuff for managing threads ************/
 std::vector<int> threads_to_be_killed;
 std::map<int, std::thread> thread_id_thread_map;
 bool tcplistener_running;
@@ -67,8 +67,10 @@ std::string exec_cmd(std::string cmd) {
 
 
 /* Our format for inputline is : <timeout><space><commands><;> */
-/* We guarantee that the timeoutstr and cmdstr are not modified if parsing fails */
+/* We guarantee that the passed-by-reference args are not modified if parsing fails */
 bool parse_time_cmd(std::string& inputline, long& timeout, std::string& cmdstr) {
+
+  /* TODO: Need a lock for this function */
 
   /* Ensure only empty cmdstr is passed so that we parse and fill it */
   if(cmdstr != "") {
@@ -199,6 +201,7 @@ void tcp_client_handler(int clientfd) {
   std::string input, cmdstr;
   long timeout;
 
+  /* We will stay here till the client has disconnected (kicked or deliberate) */
   while(true) {
     /* TODO: Is recv() thread safe? */
     ssize_t bytes_received = recv(clientfd, msgbuf, sizeof(msgbuf), 0);
@@ -214,22 +217,13 @@ void tcp_client_handler(int clientfd) {
         input+=msgbuf[i];
 
         if(msgbuf[i] == ';') {
+
           if (parse_time_cmd(input, timeout, cmdstr)) {
-            /* Create a thread and maintain a different pool of threads */
+
+            /* TODO: Create a thread and maintain a different pool of threads */
           }
 
           input.clear();
-        }
-      }
-
-      /* If we received more data than one command, store it */
-      if(i<bytes_received) {
-        std::string remainder;
-
-        for(i = 0; i < bytes_received; i++) {
-          remainder+=msgbuf[i];
-          if(msgbuf[i] == ';')
-            break;
         }
       }
     }
@@ -241,7 +235,9 @@ void tcp_server_process(int conn_backlog) {
     /* Create the tcp listener if it doesn't exist. */
 
     tcpListenerStatusLock.lock();
+
     if(tcplistener_running == true) {
+
       /* TODO: Do health checks? */
       tcpListenerStatusLock.unlock();
       return;
@@ -255,12 +251,12 @@ void tcp_server_process(int conn_backlog) {
     int listenfd=-1;
     struct sockaddr_in listenaddr;
 
-    /* use SEQPACKET instead of STREAM ? */
+    /* TODO: use SEQPACKET instead of STREAM ? */
     listenfd=socket(AF_INET, SOCK_STREAM, 0);
 
     if(listenfd < 0) {
-    std::cout << "Could not get a socket. Aborting.";
-    exit(1);
+      std::cout << "Could not get a socket. Aborting.";
+      exit(1);
     }
 
     /* Clear the struct instance */
@@ -304,17 +300,17 @@ void tcp_server_process(int conn_backlog) {
 
       /* Valid clientfd here */
       /* Enable a simple hello cipher here : TODO */
-
+      /* For each accepted client, we create a handler thread which will be alive till the client
+         disconnects (deliberately, or we kick it) */
       std::thread(tcp_client_handler, clientfd);
     }
 
-    /* TODO: Fix -Wsign-compare warnings to shut up gcc for good ;-) */
-
+    /* TODO: Also set tcplistener_running to  false when killing tcp server. */
     tcpListenerStatusLock.lock();
-    /* TODO: Also set this to  false when killing tcp server. */
     tcplistener_running = false;
-    std::cout << "Set listener to false!" << std::endl;
     tcpListenerStatusLock.unlock();
+
+    std::cout << "TCP Listener has been shut down." << std::endl;
 }
 
 
@@ -374,7 +370,7 @@ int main() {
 
         if(parse_time_cmd(inputline, time_for_task, str_cmd) == true) {
 
-          std::cout << "Creating thread." << std::endl;
+          std::cout << "Creating [UNIX] thread." << std::endl;
           ++tid;
           thread_id_thread_map[tid]=std::thread(timeout, time_for_task, tid, str_cmd);
         }
