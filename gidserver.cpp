@@ -24,7 +24,7 @@ static volatile sig_atomic_t sigusr1_caught = 0;
 static volatile sig_atomic_t sigusr2_caught = 0;
 
 static std::mutex theLock;
-std::vector<int> t;
+std::vector<int> threads_to_be_killed;
 std::map<int, std::thread> m;
 
 /* TODO: Replace with unix socket */
@@ -153,7 +153,7 @@ void timeout(int time_in_sex, int thread_id, std::string cmd_to_execute) {
     std::cout << "T[" << thread_id << "] result is : " << execute_if_sane(cmd_to_execute) << std::endl;
 
     theLock.lock();
-    t.push_back(thread_id);
+    threads_to_be_killed.push_back(thread_id);
     theLock.unlock();
 }
 
@@ -377,11 +377,11 @@ int main() {
       }
 
       theLock.lock();
-      if(t.size() > 0) {
-        m[t[0]].join();
-        std::cout << "T[" << t[0] << "]: Reaped (and sent to hell)" << std::endl;
-        m.erase(t[0]);
-        t.erase(t.begin());
+      if(threads_to_be_killed.size() > 0) {
+        m[threads_to_be_killed[0]].join();
+        std::cout << "T[" << threads_to_be_killed[0] << "]: Reaped (and sent to hell)" << std::endl;
+        m.erase(threads_to_be_killed[0]);
+        threads_to_be_killed.erase(threads_to_be_killed.begin());
       }
       theLock.unlock();
 
