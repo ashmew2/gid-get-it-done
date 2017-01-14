@@ -25,7 +25,7 @@ static volatile sig_atomic_t sigusr2_caught = 0;
 
 static std::mutex theLock;
 std::vector<int> threads_to_be_killed;
-std::map<int, std::thread> m;
+std::map<int, std::thread> thread_id_thread_map;
 
 /* TODO: Replace with unix socket */
 std::string GID_PIPE_FILE="/tmp/timer";
@@ -369,7 +369,7 @@ int main() {
 
           std::cout << "Creating thread." << std::endl;
           ++tid;
-          m[tid]=std::thread(timeout, time_for_task, tid, str_cmd);
+          thread_id_thread_map[tid]=std::thread(timeout, time_for_task, tid, str_cmd);
         }
         else {
           std::cout << "Failed to parse : " << inputline << std::endl;
@@ -378,9 +378,9 @@ int main() {
 
       theLock.lock();
       if(threads_to_be_killed.size() > 0) {
-        m[threads_to_be_killed[0]].join();
+        thread_id_thread_map[threads_to_be_killed[0]].join();
         std::cout << "T[" << threads_to_be_killed[0] << "]: Reaped (and sent to hell)" << std::endl;
-        m.erase(threads_to_be_killed[0]);
+        thread_id_thread_map.erase(threads_to_be_killed[0]);
         threads_to_be_killed.erase(threads_to_be_killed.begin());
       }
       theLock.unlock();
