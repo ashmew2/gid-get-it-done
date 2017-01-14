@@ -23,14 +23,21 @@
 static volatile sig_atomic_t sigusr1_caught = 0;
 static volatile sig_atomic_t sigusr2_caught = 0;
 
-static std::mutex theLock;
+/*********** Global stuff we have right now for managing threads *****/
 std::vector<int> threads_to_be_killed;
 std::map<int, std::thread> thread_id_thread_map;
+bool tcplistener_running;
+
+/*********** Locks for Global management stuff we have above *********/
+static std::mutex threadKillerLock;
+/* Lock for map should come here */
+static std::mutex tcpListenerStatusLock;
+
+/*********** End of Global management + locking **********************/
 
 /* TODO: Replace with unix socket */
 std::string GID_PIPE_FILE="/tmp/timer";
 int LISTEN_PORT = 42000;
-bool tcplistener_running;
 
 /* Read gidserver.conf at runtime and reload with SIGHUP */
 
@@ -152,9 +159,9 @@ void timeout(int time_in_sex, int thread_id, std::string cmd_to_execute) {
     std::cout << "T[" << thread_id << "] Executing command:" << cmd_to_execute << std::endl;
     std::cout << "T[" << thread_id << "] result is : " << execute_if_sane(cmd_to_execute) << std::endl;
 
-    theLock.lock();
+    threadKillerLock.lock();
     threads_to_be_killed.push_back(thread_id);
-    theLock.unlock();
+    threadKillerLock.unlock();
 }
 
 /* TODO - Check how the children handle these signals. Should we uninstall the signal handler for children threads? */
@@ -233,16 +240,16 @@ void tcp_server_process(int conn_backlog) {
 
     /* Create the tcp listener if it doesn't exist. */
 
-    theLock.lock();
+    tcpListenerStatusLock.lock();
     if(tcplistener_running == true) {
       /* TODO: Do health checks? */
-      theLock.unlock();
+      tcpListenerStatusLock.unlock();
       return;
     }
 
     /* If still here, we haven't released the lock */
     tcplistener_running = true;
-    theLock.unlock();
+    tcpListenerStatusLock.unlock();
 
     /* TODO: Extend to multiple listeners on several ports (with configurability) */
     int listenfd=-1;
@@ -303,11 +310,11 @@ void tcp_server_process(int conn_backlog) {
 
     /* TODO: Fix -Wsign-compare warnings to shut up gcc for good ;-) */
 
-    theLock.lock();
+    tcpListenerStatusLock.lock();
     /* TODO: Also set this to  false when killing tcp server. */
     tcplistener_running = false;
     std::cout << "Set listener to false!" << std::endl;
-    theLock.unlock();
+    tcpListenerStatusLock.unlock();
 }
 
 
@@ -376,24 +383,25 @@ int main() {
         }
       }
 
-      theLock.lock();
+      threadKillerLock.lock();
       if(threads_to_be_killed.size() > 0) {
         thread_id_thread_map[threads_to_be_killed[0]].join();
         std::cout << "T[" << threads_to_be_killed[0] << "]: Reaped (and sent to hell)" << std::endl;
         thread_id_thread_map.erase(threads_to_be_killed[0]);
         threads_to_be_killed.erase(threads_to_be_killed.begin());
       }
-      theLock.unlock();
+      threadKillerLock.unlock();
 
       /* TODO: Replace this with TCP listener's own lock */
-      theLock.lock();
+      tcpListenerStatusLock.lock();
+
       if(tcplistener_running != true) {
         std::cout << "The TCP Server has died. Reaping (and sending it to Hell)";
         thread_tcp_listener.join();
         tcplistener_running = true; /* BAD HACK, cant restart! TODO: */
       }
 
-      theLock.unlock();
+      tcpListenerStatusLock.unlock();
     }
 
     return 0;
