@@ -7,6 +7,7 @@
 #include <vector>
 #include <map>
 #include <fstream>
+#include <string>
 
 #include <cstring>
 #include <cstdlib>
@@ -36,7 +37,7 @@ bool tcplistener_running;
 /* TODO: Implement warn(), error(), log(), debug() and supress output (and code?) in production builds */
 
 /* TODO: What happens if gidserver tries to execute gidserver? ;) */
-/* TODO: exec_cmd does not seem to play nicely with mpg123 
+/* TODO: exec_cmd does not seem to play nicely with mpg123
          (possibly, with some other interactive thingies as well) */
 std::string exec_cmd(std::string cmd) {
     char buffer[128];
@@ -55,6 +56,63 @@ std::string exec_cmd(std::string cmd) {
     }
 
     return result;
+}
+
+
+/* Our format for inputline is : <timeout><space><commands><;> */
+/* We guarantee that the timeoutstr and cmdstr are not modified if parsing fails */
+bool parse_time_cmd(std::string& inputline, long& timeout, std::string& cmdstr) {
+
+  /* Ensure only empty cmdstr is passed so that we parse and fill it */
+  if(cmdstr != "") {
+    std::cout << "[WARNING]: Failed parse. cmdstr: [E0]" << cmdstr << std::endl;
+    return false;
+  }
+
+  /* Stick to inputline format */
+  if(inputline == "" || inputline[inputline.length() - 1] != ';' ||
+     inputline[0] == '-') {
+
+    std::cout << "[WARNING]: Failed to parse line : [E1] " << inputline << std::endl;
+    return false;
+  }
+
+  size_t end_of_timeout = inputline.find(" ");
+
+  if(end_of_timeout == std::string::npos || end_of_timeout == 0 ||
+     end_of_timeout == inputline.length() - 1) {
+
+    /* No proper timeout = whine and bail */
+    std::cout << "[WARNING]: Failed to parse line : [E2] " << inputline << std::endl;
+    return false;
+  }
+  else {
+    /* Make sure that all digits till space are numbers */
+    size_t i;
+    for(i = 0; i < end_of_timeout; i++)
+      if(!isdigit(inputline[i]))
+        break;
+
+    if(i!=end_of_timeout) {
+      std::cout << "[WARNING]: Failed to parse line : [E3] " << inputline << std::endl;
+      return false;
+    }
+
+    std::string timeoutstr = inputline.substr(0, end_of_timeout);
+    long timeout_ = 0;
+    try {
+      timeout_ = stol(timeoutstr, nullptr, 10);
+    }
+    catch(const std::exception& fucked) { return false; }
+
+    timeout=timeout_;
+    cmdstr = inputline.substr(end_of_timeout+1);
+    cmdstr.erase(cmdstr.end()-1);
+  }
+
+  /* TODO: Curse the client who put this damn line into our input feed */
+
+  return true;
 }
 
 std::string execute_if_sane(std::string cmd_to_execute) {
@@ -128,6 +186,49 @@ void handle_sigusr2(int signum) {
   sigusr2_caught=1;
 }
 
+void tcp_client_handler(int clientfd) {
+
+  char msgbuf[73];
+  std::string input, cmdstr;
+  long timeout;
+
+  while(true) {
+    /* TODO: Is recv() thread safe? */
+    ssize_t bytes_received = recv(clientfd, msgbuf, sizeof(msgbuf), 0);
+
+    if(bytes_received < 0) {
+      /* Kick client? */
+      std::cout << "Error with recv(). " << std::endl;
+    }
+    else {
+      int i;
+
+      for(i = 0; i < bytes_received; i++) {
+        input+=msgbuf[i];
+
+        if(msgbuf[i] == ';') {
+          if (parse_time_cmd(input, timeout, cmdstr)) {
+            /* Create a thread and maintain a different pool of threads */
+          }
+
+          input.clear();
+        }
+      }
+
+      /* If we received more data than one command, store it */
+      if(i<bytes_received) {
+        std::string remainder;
+
+        for(i = 0; i < bytes_received; i++) {
+          remainder+=msgbuf[i];
+          if(msgbuf[i] == ';')
+            break;
+        }
+      }
+    }
+  }
+}
+
 void tcp_server_process(int conn_backlog) {
 
     /* Create the tcp listener if it doesn't exist. */
@@ -197,13 +298,7 @@ void tcp_server_process(int conn_backlog) {
       /* Valid clientfd here */
       /* Enable a simple hello cipher here : TODO */
 
-      char msgbuf[40];
-      ssize_t bytes_received = recv(clientfd, msgbuf, sizeof(msgbuf), 0);
-
-      if(bytes_received < 0)
-        std::cout << "Error with recv(). " << std::endl;
-      else
-        std::cout << "Client sent: " << msgbuf << std::endl;
+      std::thread(tcp_client_handler, clientfd);
     }
 
     /* TODO: Fix -Wsign-compare warnings to shut up gcc for good ;-) */
@@ -215,56 +310,6 @@ void tcp_server_process(int conn_backlog) {
     theLock.unlock();
 }
 
-/* Our format for inputline is : <timeout><space><commands><;> */
-/* We guarantee that the timeoutstr and cmdstr are not modified if parsing fails */
-bool parse_time_cmd(std::string& inputline, std::string& timeoutstr, std::string& cmdstr) {
-
-  /* Ensure only empty timeoutstr and cmdstr are passed so that we parse and fill them */
-  if(timeoutstr != "" || cmdstr != "") {
-    std::cout << "[WARNING]: Failed parse. timeoutstr and cmdstr: [E0]" << timeoutstr
-              << "; " << cmdstr << std::endl;
-    return false;
-  }
-
-  /* Stick to inputline format */
-  if(inputline == "" || inputline[inputline.length() - 1] != ';' ||
-     inputline[0] == '-') {
-
-    std::cout << "[WARNING]: Failed to parse line : [E1] " << inputline << std::endl;
-    return false;
-  }
-
-  size_t end_of_timeout = inputline.find(" ");
-
-  if(end_of_timeout == std::string::npos || end_of_timeout == 0 ||
-     end_of_timeout == inputline.length() - 1) {
-
-    /* No proper timeout = whine and bail */
-    std::cout << "[WARNING]: Failed to parse line : [E2] " << inputline << std::endl;
-    return false;
-  }
-  else {
-    /* Make sure that all digits till space are numbers */
-    size_t i;
-    for(i = 0; i < end_of_timeout; i++)
-      if(!isdigit(inputline[i]))
-        break;
-
-    if(i!=end_of_timeout) {
-      std::cout << "[WARNING]: Failed to parse line : [E3] " << inputline << std::endl;
-      return false;
-    }
-    else {
-      timeoutstr = inputline.substr(0, end_of_timeout);
-      cmdstr = inputline.substr(end_of_timeout+1);
-      cmdstr.erase(cmdstr.end()-1);
-    }
-  }
-
-  /* TODO: Curse the client who put this damn line into our input feed */
-
-  return true;
-}
 
 /* TODO: Replace communication with a nixock instead */
 int main() {
@@ -285,7 +330,8 @@ int main() {
     /* TODO - nixock */
 
     std::string inputline;
-    std::string str_timeout="", str_cmd="";
+    std::string str_cmd="";
+    long time_for_task;
 
     /* TODO: Remove this infinite loop */
     while (1) {
@@ -319,9 +365,8 @@ int main() {
 
         number_of_lines_read++;
 
-        if(parse_time_cmd(inputline, str_timeout, str_cmd) == true) {
+        if(parse_time_cmd(inputline, time_for_task, str_cmd) == true) {
 
-          int time_for_task = atoi(str_timeout.c_str());
           std::cout << "Creating thread." << std::endl;
           ++tid;
           m[tid]=std::thread(timeout, time_for_task, tid, str_cmd);
@@ -338,15 +383,16 @@ int main() {
         m.erase(t[0]);
         t.erase(t.begin());
       }
-
       theLock.unlock();
 
+      /* TODO: Replace this with TCP listener's own lock */
       theLock.lock();
       if(tcplistener_running != true) {
         std::cout << "The TCP Server has died. Reaping (and sending it to Hell)";
         thread_tcp_listener.join();
         tcplistener_running = true; /* BAD HACK, cant restart! TODO: */
       }
+
       theLock.unlock();
     }
 

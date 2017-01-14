@@ -24,6 +24,10 @@ The gid server is at the center of gid and takes care of :
     -   Listen to TCP based requests for delayed execution
     (Basically, executes a command after waiting for a designated time period)
 
+Format for sending commands to gid server:
+    -   Regex: [0-9]+ [^;]+;
+    -   String explanation: <numbers><space><commands without the ; character><;>
+
 NOTES for ALARMS
 ----------------
 If you want to sound alarms, gid uses mpg123 (for now anyway), install it.
