@@ -3,6 +3,7 @@
 #include<sys/socket.h>
 #include<netinet/in.h>
 #include<arpa/inet.h>
+#include<unistd.h>
 
 using namespace std;
 
@@ -22,11 +23,12 @@ int main() {
 
   if(connect(clientfd, (struct sockaddr *)&serveraddr, sizeof(struct sockaddr_in)) < 0) {
     cout<<"Connect to server failed."<<endl;
+    close(clientfd);
     return 2;
   }
 
   char command[] = "10 random_command_here;";
   cout<<" Sent: " << send(clientfd, (void *)command, sizeof(command), 0) <<" bytes out of "<< sizeof(command) << endl;
-
+  close(clientfd);
   return 0;
 }
