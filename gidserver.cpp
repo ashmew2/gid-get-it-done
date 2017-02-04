@@ -20,6 +20,10 @@
 #include <sys/types.h>
 #include <arpa/inet.h>
 
+#include <sys/select.h>
+#include <sys/time.h>
+#include <unistd.h>
+
 static volatile sig_atomic_t sigusr1_caught = 0;
 static volatile sig_atomic_t sigusr2_caught = 0;
 
@@ -27,22 +31,130 @@ static volatile sig_atomic_t sigusr2_caught = 0;
 std::vector<int> threads_to_be_killed;
 std::map<int, std::thread> thread_id_thread_map;
 bool tcplistener_running;
+static unsigned int numThreads;
+
+std::map<int, std::string> thread_requests;
+std::map<int, std::string> thread_responses;
 
 /*********** Locks for Global management stuff we have above *********/
 static std::mutex threadKillerLock;
 /* Lock for map should come here */
 static std::mutex tcpListenerStatusLock;
+static unsigned int numThreads;
+
+static std::mutex tcpRequestLock;
+static std::mutex tcpResponseLock;
+static std::mutex threadRequestLock;
+static std::mutex threadResponseLock;
 
 /*********** End of Global management + locking **********************/
 
 /* TODO: Replace with unix socket */
 std::string GID_PIPE_FILE="/tmp/timer";
 int LISTEN_PORT = 42000;
+// == DELIBERATE ERROR ==
+int FUCKMY LIFE BITCJ;
+
+execute(std::string cmd) {
+
+}
+
+void slave(std::string task, int sleeptime, bool saveout, int reqkey) {
+
+  /* Invoke with std::thread(red, ).detach(); */
+
+  /* What is sanity? */
+  if(cmdmap.find(task) == map::end) {
+    KILLED_BY_MAKER();
+  }
+
+  std::this_thread::sleep_for(std::chrono::seconds(sleeptime));
+  std::string taskoutput;
+
+  taskoutput = execute(task);
+
+  /*inform the reader of this somehow*/
+  /* Use the select loop as the menu loop of this code. Send the response from here in an FD back to select */
+
+  if(saveout) {
+    responses[reqkey] = taskoutput;
+
+    /* Notify */
+    char msg[MASTER_MSG_SIZE];
+
+    int d;
+    for(d=0; reqkey!=0; d++, reqkey=reqkey/10) {
+      msg[d] = char(reqkey%10 + int('0'));
+    }
+    for(int i = 0; i<=d/2; i++)
+      char x=msg[i], msg[i]=msg[d-i], msg[d-i]=x;
+
+    write(mastersfd, msg, d);
+  }
+  
+  ~thread();
+}
+
+int main() {
+
+  /* Create all FDs here */
+  int slavefd = open("/tmp/", O_TMPFILE);
+  int tcplistenerfd = init_tcp_listener();
+  fd_set READFDS, WRITEFDS;
+  std::vector<int> tcpreq;
+  std::map<int, std::string> resp;
+  std::vector<int> tcpresp;
+
+  while(true) {
+    FD_ZERO(&READFDS);
+    FD_ZERO(&WRITEFDS);
+    FD_SET(requestfd, &READFDS);
+    FD_SET(tcplistenerfd, &READFDS);
+
+    /* Calculate nfds properly here */
+    int nfds = ;
+
+    /* Block on select */
+    select(nfds, READFDS, WRITEFDS, NULL, NULL);
+
+    /* Check for new client connection requests */
+    if(FD_ISSET(tcplistenerfd, &READFDS)) {
+      sockaddr_in client_addr;
+      socklen_t clientlen;
+      int clientfd = accept(tcplistenerfd, (struct sockaddr *)&client_addr, &clientlen);
+      if(clientfd != -1) {
+        tcpreq.push_back(clientfd);
+      }
+    }
+
+    /* Got any new TCP requests from clients */
+    if(FD_ISSET(tcpreq.forall(), &READFDS)) {
+      /* Put in whatever amounts of request data we got.
+         If it's the end of the request according to PROTO, we will spawn a new detached thread
+         For EOF, remove this file descriptor from tcpreq..What about tcpresp?
+      */
+    }
+
+    /* Got something from the slaves */
+    if(FD_ISSET(slavefd, &READFDS)) {
+      /* This means that some execution thread finished, time to let the client know about it. */
+      tcpresp.push_back();
+    }
+
+    /* Check if we can send back responses to the TCP client that requested something. */
+    if(FD_ISSET(tcpresp.all(), &WRITEFDS)) {
+      /* This means that some execution thread finished, time to let the client know about it. */
+      write(tcpresp.clientfd, waiting response, ahead);
+    }
+  }
+}
+
+
+
 
 /* Read gidserver.conf at runtime and reload with SIGHUP */
 
 /* TODO: Implement warn(), error(), log(), debug() and supress output (and code?) in production builds */
-
 /* TODO: What happens if gidserver tries to execute gidserver? ;) */
 /* TODO: exec_cmd does not seem to play nicely with mpg123
          (possibly, with some other interactive thingies as well) */
@@ -59,18 +171,17 @@ std::string exec_cmd(std::string cmd) {
         if (fgets(buffer, 128, pipe.get()) != NULL) {
             result += buffer;
             std::cout << buffer;
-            }
+        }
     }
 
     return result;
 }
 
-
 /* Our format for inputline is : <timeout><space><commands><;> */
 /* We guarantee that the passed-by-reference args are not modified if parsing fails */
 bool parse_time_cmd(std::string& inputline, long& timeout, std::string& cmdstr) {
 
-  /* TODO: Need a lock for this function */
+/*                              TODO: Need a lock for this function                 */
 
   /* Ensure only empty cmdstr is passed so that we parse and fill it */
   if(cmdstr != "") {
@@ -161,9 +272,7 @@ void timeout(int time_in_sex, int thread_id, std::string cmd_to_execute) {
     std::cout << "T[" << thread_id << "] Executing command:" << cmd_to_execute << std::endl;
     std::cout << "T[" << thread_id << "] result is : " << execute_if_sane(cmd_to_execute) << std::endl;
 
-    threadKillerLock.lock();
-    threads_to_be_killed.push_back(thread_id);
-    threadKillerLock.unlock();
+    std::this_thread.join();
 }
 
 /* TODO - Check how the children handle these signals. Should we uninstall the signal handler for children threads? */
@@ -193,42 +302,15 @@ void handle_sigusr1(int signum) {
 void handle_sigusr2(int signum) {
 
   sigusr2_caught=1;
+
 }
 
-void tcp_client_handler(int clientfd) {
-
-  char msgbuf[73];
-  std::string input, cmdstr;
-  long timeout;
-
-  /* We will stay here till the client has disconnected (kicked or deliberate) */
-  while(true) {
-    /* TODO: Is recv() thread safe? */
-    ssize_t bytes_received = recv(clientfd, msgbuf, sizeof(msgbuf), 0);
-
-    if(bytes_received < 0) {
-      /* Kick client? */
-      std::cout << "Error with recv(). " << std::endl;
-    }
-    else {
-      int i;
-
-      for(i = 0; i < bytes_received; i++) {
-        input+=msgbuf[i];
-
-        if(msgbuf[i] == ';') {
-
-          if (parse_time_cmd(input, timeout, cmdstr)) {
-
-            /* TODO: Create a thread and maintain a different pool of threads */
-          }
-
-          input.clear();
-        }
-      }
-    }
-  }
-}
+/* Host a contest on a whatsapp profile ( Android, sighup to whatsapp to reload its contents like photo) 
+   Have a range of questions : Q1 to Q9.
+   Whoever sends a message, take it and pass it to a judge to record who did it.
+   Announce stats at the end.
+   Repeat.
+ */
 
 void tcp_server_process(int conn_backlog) {
 
@@ -278,12 +360,23 @@ void tcp_server_process(int conn_backlog) {
       exit(3);
     }
 
-    std::cout << "Now accepting connections on " << LISTEN_PORT << std::endl;
+    std::cout << std::endl << "Now accepting TCP connections on " << LISTEN_PORT
+              << std::endl;
 
     struct sockaddr_in clientaddr;
     socklen_t clientaddr_size = sizeof(struct sockaddr_in);
 
     int failures = 0;
+
+    std::vector<int> connected_clients;
+    std::map<int, std::string> clientfd_msg_map;
+    fd_set recv_fdset;
+    fd_set send_fdset;
+    int max_clientfd = 0;
+
+    FD_ZERO(&recv_fdset);
+    FD_ZERO(&send_fdset);
+
     while(true) {
 
       /* TODO: Set soft and hard client limits to prevent being flooded */
@@ -296,12 +389,60 @@ void tcp_server_process(int conn_backlog) {
           std::cout << "Too many failures with accept() returning bogus FDs. Going down." << std::endl;
           exit(4);
         }
-      }
 
+        continue;
+      }
+    
       /* Valid clientfd here */
       /* Enable a simple hello cipher here : TODO */
+
+      FD_SET(clientfd, &recv_fdset);
+      connected_clients.push_back(clientfd);
+      clientfd_msg_map[clientfd] = "";
+      
+      if(max_clientfd < clientfd)
+        max_clientfd = clientfd;
+
+      struct timeval recv_tv;
+      recv_tv.tv_sec = 5;
+      recv_tv.tv_usec = 0;
+      
+      int select_ret = select(max_clientfd + 1, &recv_fdset, &send_fdset, NULL, &recv_tv);
+
+      if(select_ret < 0)
+        std::cout << "[WARNING] Select failed!" << std::endl;
+      else if(select_ret > 0) {
+        for(iterator::vector<int> it = connected_clients.begin(); it++; it != connected_clients.end()) {
+          if (FD_ISSET(*it, &recv_fdset)) {
+            char msgbuf[73];
+            ssize_t bytes_received = recv(clientfd, msgbuf, sizeof(msgbuf), 0);
+
+            if(bytes_received > 0) {
+
+              for(i = 0; i < bytes_received; i++) {
+                clientfd_msg_map[clientfd]+=msgbuf[i];
+
+                if(msgbuf[i] == ';') {
+
+                  long time_input;
+                  if (parse_time_cmd(clientfd_msg_map[clientfd], time_input, cmdstr)) {
+
+                    /* TODO: Create a thread and maintain a different pool of threads */
+
+                    std::thread(timeout, clientfd, time_input, clientfd_msg_map[clientfd]);
+                  }
+
+                  clientfd_msg_map[clientfd].clear();
+                }
+              }
+            } /*  if(bytes_received > 0) end  */
+          }
+        }
+      }
+
       /* For each accepted client, we create a handler thread which will be alive till the client
          disconnects (deliberately, or we kick it) */
+
       std::thread(tcp_client_handler, clientfd);
     }
 
@@ -313,6 +454,7 @@ void tcp_server_process(int conn_backlog) {
     std::cout << "TCP Listener has been shut down." << std::endl;
 }
 
+/* Implement a get_bytes function to fetch (continuously at the dictated byterate, acoording to varying options TODO */
 
 /* TODO: Replace communication with a nixock instead */
 int main() {
@@ -335,6 +477,9 @@ int main() {
     std::string inputline;
     std::string str_cmd="";
     long time_for_task;
+
+    /* TODO: Make an installer which installs stuff at sane places.
+       So that development does not interfere with the releases and vice versa. */
 
     /* TODO: Remove this infinite loop */
     while (1) {
