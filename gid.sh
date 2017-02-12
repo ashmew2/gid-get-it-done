@@ -17,7 +17,7 @@
 # $ tda Code a game
 # $ tda work hard
 #
-# $ cat todo.gid
+# $ tda --show
 # 0. Get grocery
 # 1. Code a game
 # 2. work hard
@@ -27,11 +27,8 @@ BACKUP_FLAG=1
 BACKUP_PREFIX=""
 BACKUP_SUFFIX=".bck"
 REVIEW_THRESHOLD=20
-#CYAN='\033[0;36m'
+CYAN='\033[0;36m'
 #NC='\033[0m'
-
-# Default timeout if no arg to tda --timer
-DEFAULT_TIMEOUT=1
 
 # Function for reviewing the todo list
 function tdre {
@@ -86,52 +83,27 @@ function tda {
 
     # make sure we have some args.
     if [[ $# -eq 0 ]]; then
-        #echo -e "${CYAN}No task mentioned to be added. (Ex: tda *task to be added*)${NC}"
+        echo -e "${CYAN}Nothing to add."
         return 0
     fi
 
     # Handle args
 
-    # TODO - Do we need a proper timing service?
     # TODO - Enable script execution after timer expires.
-
-    # tda --timer 120 ./echo-check-noodles.sh
-
-    [[ $1 == --timer ]]  &&  {
-
-        # We let the user get away with just the timeout and sound the alarm on timer expiry [gidserver].
+    [[ $1 == --alarm ]]  &&  {
         if [[ $# -lt 2 ]]; then
-            echo "[ERROR]: Usage: tda --timer <timeout> [<cmd>]"
+            echo "[ERROR]: Usage: tda --alarm <timeout seconds>"
             return 1
         fi
 
-        if [[ -z $(pgrep gidserver) ]]; then
-            echo "Cannot set timer. Reason: GID server is not running."
-            return 1
-        fi
-
-        # Drop the --timer from $@
-        shift
-
-        # gid server should cope with bad clients who send alpha strings as timeout.
-        # We are using the timeout<space>command format.
-        echo "$@;" >> /tmp/timer
-        kill -USR1 $(pgrep gidserver)
+        ./setalarm.sh $2 &
         return 0
     }
 
-    [[ $1 == --adb-pull ]]  &&  {
-        echo "Call adb-pull.sh"
-        # TODO: Guess what's missing here
-    }
-
-    [[ $1 == --adb-push ]]  &&  {
-        echo "Call adb-push.sh"
-        # TODO: Guess what's missing here
-    }
-
-    [[ $1 = --file ]] && {
-        echo $GID_TODO_FILE
+    [[ $1 = --info ]] && {
+        echo "TODO FILE: $GID_TODO_FILE"
+        echo "Encrypted: No"
+        echo "-------------------------"
         return 0
     }
 
@@ -141,7 +113,8 @@ function tda {
             echo -e "====\n#${num}:\n===="
             echo $REPLY
             num=$(expr $num + 1)
-        done < $GID_TODO_FILE | less
+        done < $GID_TODO_FILE
+
         return 0
     }
 
@@ -171,12 +144,10 @@ function tda {
         echo -e "\t\t$ tda Conquer the world!"
         echo -e "\t--------------"
         echo -e "\ttda --show  : Show your todo list"
-        echo -e "\ttda --adb-pull <ANDROID_FILEPATH> : Pull ANDROID file from an android device"
-        echo -e "\ttda --adb-push <LOCAL_FILEPATH> : Push LOCAL file to an android device"
         echo -e "\ttda --usage : Print this message and exit"
-        echo -e "\ttda --file  : Print the full path to todo file"
-        echo -e "\ttda --search word1 [word2] ... : Search for all words in TODO file"
-        echo -e "\ttda --timer [seconds] <cmd> : Sleep for numseconds and execute <cmd>."
+        echo -e "\ttda --info  : Print info about tda"
+        echo -e "\ttda --search word : Search for word in TODO file and list all matches."
+        echo -e "\ttda --alarm seconds : Ring alarm after [seconds]."
         echo -e "\ttdr         : Reload the gid.sh script"
         echo -e "\ttdre        : Review and sort your todo list"
         echo -e "\t--------------"
@@ -207,6 +178,5 @@ function tda {
 #TODO - Decide if we need a tda-clean function as well to clean up old files etc or not.
 #TODO - Add network sync to keep safe with buffering.
 #TODO - Fix the naming scheme of all binaries, maybe tdreload is better than tdr as we can have tdremove and tdedit as well in that case
-#TODO - Add a tda --expire <DATE-TIME> to set a reminder which expires in the future. --timer and --expire (or renamed) should have a common core.
 #TODO - Follow code conventions, reeplace all $x -> ${x} (and consistent) (use regex)
 #TODO - define multiple levels of THRESHOLD REVIEW advice to help the user control abuse of this todo man
