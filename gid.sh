@@ -84,8 +84,9 @@ function tda {
 
     # make sure we have some args.
     if [[ $# -eq 0 ]]; then
-        echo -e "${CYAN}Nothing to add."
-        return 0
+        echo -e "ERROR: No arguments given."
+        tda --usage
+        return 1
     fi
 
     # Handle args
@@ -147,13 +148,13 @@ function tda {
             echo -e "\t$ tda Book tickets for GnR tour"
             echo
             printf "%-30s %s\n" "tda --show" "Show your todo list"
-            printf "%-30s %s\n" "tda --help" "Show this help and exit."
-            printf "%-30s %s\n" "tda --usage" "Same as --help."
             printf "%-30s %s\n" "tda --edit" "Edit the file directly using EDITOR env var. (Use caution)"
             printf "%-30s %s\n" "tda --search word" "Search for word in task list"
             printf "%-30s %s\n" "tda --alarm seconds" "Ring alarm after [seconds]."
             printf "%-30s %s\n" "tdr"  "Reload the gid.sh script"
             printf "%-30s %s\n" "tdre" "Review your todo list"
+            printf "%-30s %s\n" "tda --help" "Show this help and exit."
+            printf "%-30s %s\n" "tda --usage" "Same as --help."
             echo
             echo "Report bugs at github.com/ashmew2/gid-get-it-done"
             return 0
