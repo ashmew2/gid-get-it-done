@@ -109,8 +109,8 @@ function tda {
         --show)
             num=0
             while read -r; do
-                echo -n "${num}. "
-                echo $REPLY
+                [[ -z $REPLY ]] && continue
+                echo "${num}. $REPLY"
                 num=$(expr $num + 1)
             done < $GID_TODO_FILE
             return 0
