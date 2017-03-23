@@ -109,7 +109,7 @@ function tda {
         --show)
             num=0
             while read -r; do
-                echo -e "====\n#${num}:\n===="
+                echo -n "${num}. "
                 echo $REPLY
                 num=$(expr $num + 1)
             done < $GID_TODO_FILE
