@@ -88,15 +88,19 @@ function tda {
     fi
 
     # Handle args
-
-    # TODO - Enable script execution after timer expires.
     [[ $1 == --alarm ]]  &&  {
         if [[ $# -lt 2 ]]; then
             echo "[ERROR]: Usage: tda --alarm <timeout seconds>"
             return 1
         fi
 
-        ./setalarm.sh $2 &
+        # TODO: Switch with respect to which terminal you have.
+        term=$(which $(ps -e --forest $$ | grep '^\s*'$$ -B 1 | head -n 1 | awk '{print $NF}'))
+
+        case $term in
+            sakura) $term -d $HOME/gid -x "/bin/bash -c 'sleep $2; mpg123 alarmtone.mp3'" 2>/dev/null & ;;
+            *) $(which xterm) -e "/bin/bash -c 'sleep $2; mpg123 alarmtone.mp3'" 2>/dev/null & ;;
+        esac
         return 0
     }
 
