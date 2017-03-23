@@ -23,6 +23,7 @@
 # 2. work hard
 
 GID_TODO_FILE="${HOME}/mytodo.gid"
+ALARMTONE=$HOME/gid/alarmtone.mp3
 BACKUP_FLAG=1
 BACKUP_PREFIX=""
 BACKUP_SUFFIX=".bck"
@@ -97,12 +98,17 @@ function tda {
                 return 1
             fi
 
-            # TODO: Switch with respect to which terminal you have.
             term=$(which $(ps -e --forest $$ | grep '^\s*'$$ -B 1 | head -n 1 | awk '{print $NF}'))
+            case $(basename $term) in
 
-            case $term in
-                sakura) $term -d $HOME/gid -x "/bin/bash -c 'sleep $2; mpg123 alarmtone.mp3'" 2>/dev/null & ;;
-                *) $(which xterm) -e "/bin/bash -c 'sleep $2; mpg123 alarmtone.mp3'" 2>/dev/null & ;;
+                sakura) $term -e "/bin/bash -c 'sleep $2; mpg123 $ALARMTONE'" 2>/dev/null & ;;
+
+                *) if which xterm 2>/dev/null >&2; then
+                       $(which xterm) -e "/bin/bash -c 'sleep $2; mpg123 $ALARMTONE'" 2>/dev/null &
+                   else
+                       echo "ERROR: Failed to detect terminal to set alarm"
+                   fi
+                   ;;
             esac
             return 0
             ;;
