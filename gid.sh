@@ -31,6 +31,7 @@ CYAN='\033[0;36m'
 #NC='\033[0m'
 
 # Function for reviewing the todo list
+# Most likely going away in favour of --edit
 function tdre {
 
     # Be safe (not pregnant)
@@ -88,77 +89,80 @@ function tda {
     fi
 
     # Handle args
-    [[ $1 == --alarm ]]  &&  {
-        if [[ $# -lt 2 ]]; then
-            echo "[ERROR]: Usage: tda --alarm <timeout seconds>"
-            return 1
-        fi
+    case $1 in
+        --alarm)
+            if [[ $# -lt 2 ]]; then
+                echo "[ERROR]: Usage: tda --alarm <timeout seconds>"
+                return 1
+            fi
 
-        # TODO: Switch with respect to which terminal you have.
-        term=$(which $(ps -e --forest $$ | grep '^\s*'$$ -B 1 | head -n 1 | awk '{print $NF}'))
+            # TODO: Switch with respect to which terminal you have.
+            term=$(which $(ps -e --forest $$ | grep '^\s*'$$ -B 1 | head -n 1 | awk '{print $NF}'))
 
-        case $term in
-            sakura) $term -d $HOME/gid -x "/bin/bash -c 'sleep $2; mpg123 alarmtone.mp3'" 2>/dev/null & ;;
-            *) $(which xterm) -e "/bin/bash -c 'sleep $2; mpg123 alarmtone.mp3'" 2>/dev/null & ;;
-        esac
-        return 0
-    }
+            case $term in
+                sakura) $term -d $HOME/gid -x "/bin/bash -c 'sleep $2; mpg123 alarmtone.mp3'" 2>/dev/null & ;;
+                *) $(which xterm) -e "/bin/bash -c 'sleep $2; mpg123 alarmtone.mp3'" 2>/dev/null & ;;
+            esac
+            return 0
+            ;;
 
-    [[ $1 = --info ]] && {
-        echo "TODO FILE: $GID_TODO_FILE"
-        echo "Encrypted: No"
-        echo "-------------------------"
-        return 0
-    }
+        --show)
+            num=0
+            while read -r; do
+                echo -e "====\n#${num}:\n===="
+                echo $REPLY
+                num=$(expr $num + 1)
+            done < $GID_TODO_FILE
+            return 0
+            ;;
 
-    [[ $1 = --show ]] && {
-        num=0
-        while read -r; do
-            echo -e "====\n#${num}:\n===="
-            echo $REPLY
-            num=$(expr $num + 1)
-        done < $GID_TODO_FILE
+        --search)
+            SEARCH_USAGE='USAGE: tda --search word1 [word2] [word3] ...'
 
-        return 0
-    }
+            [[ -z $2 ]] && echo "$SEARCH_USAGE" && return 1
 
-    [[ $1 = --search ]] && {
-        SEARCH_USAGE='USAGE: tda --search word1 [word2] [word3] ...'
+            searchstring=''
+            for i in $*; do
+                searchstring="${searchstring}|${i}"
+            done
 
-        [[ -z $2 ]] && echo "$SEARCH_USAGE" && return 1
+            searchstring=${searchstring#|--search|}
 
-        searchstring=''
-        for i in $*; do
-            searchstring="${searchstring}|${i}"
-        done
+            grep --color=always -E -i $searchstring $GID_TODO_FILE
 
-        searchstring=${searchstring#|--search|}
+            return 0
+            ;;
 
-        grep --color=always -E -i $searchstring $GID_TODO_FILE
+        --edit)
+            cp $GID_TODO_FILE $GID_TODO_FILE.edited.$(date +%YYYYMMDD)
+            $EDITOR $GID_TODO_FILE
+            return 0
+            ;;
 
-        return 0
-    }
+        --help|--usage)
+            echo -e "\tExample usage:"
+            echo -e "\t--------------"
+            echo -e "\t\t$ tda Conquer the world"
+            echo -e "\t\t$ tda Fix stack corruption in TCP"
+            echo -e "\t\t$ tda Book tickets for GnR tour"
+            echo -e "\t--------------"
+            echo -e "\tSupported switches:"
+            echo -e "\t--------------"
+            echo -e "\ttda --show  : Show your todo list"
+            echo -e "\ttda --help : Show this help and exit."
+            echo -e "\ttda --usage : Same as --help."
+            echo -e "\ttda --edit : Edit the file directly (Use caution)."
+            echo -e "\ttda --search word : Search for word in task list"
+            echo -e "\ttda --alarm seconds : Ring alarm after [seconds]."
+            echo -e "\ttdr         : Reload the gid.sh script"
+            echo -e "\ttdre        : Review your todo list"
+            echo -e "\t--------------"
 
-    [[ $1 = --usage ]] && {
-        echo -e "\tExample usage:"
-        echo -e "\t--------------"
-        echo -e "\t\t$ tda Go to the grocery store at 13:00"
-        echo -e "\t\t$ tda Book a table for my date."
-        echo -e "\t\t$ tda fix memory corruption in the network stack"
-        echo -e "\t\t$ tda Conquer the world!"
-        echo -e "\t--------------"
-        echo -e "\ttda --show  : Show your todo list"
-        echo -e "\ttda --usage : Print this message and exit"
-        echo -e "\ttda --info  : Print info about tda"
-        echo -e "\ttda --search word : Search for word in TODO file and list all matches."
-        echo -e "\ttda --alarm seconds : Ring alarm after [seconds]."
-        echo -e "\ttdr         : Reload the gid.sh script"
-        echo -e "\ttdre        : Review and sort your todo list"
-        echo -e "\t--------------"
+            return 0
+            ;;
+    esac
 
-        return 0
-    }
-
+    # Add item to our todo file.
     echo "$@" >> $GID_TODO_FILE
 
     # Honor the REVIEW_THRESHOLD
