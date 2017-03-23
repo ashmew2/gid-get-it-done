@@ -140,24 +140,22 @@ function tda {
             ;;
 
         --help|--usage)
-            echo -e "\tExample usage:"
-            echo -e "\t--------------"
-            echo -e "\t\t$ tda Conquer the world"
-            echo -e "\t\t$ tda Fix stack corruption in TCP"
-            echo -e "\t\t$ tda Book tickets for GnR tour"
-            echo -e "\t--------------"
-            echo -e "\tSupported switches:"
-            echo -e "\t--------------"
-            echo -e "\ttda --show  : Show your todo list"
-            echo -e "\ttda --help : Show this help and exit."
-            echo -e "\ttda --usage : Same as --help."
-            echo -e "\ttda --edit : Edit the file directly (Use caution)."
-            echo -e "\ttda --search word : Search for word in task list"
-            echo -e "\ttda --alarm seconds : Ring alarm after [seconds]."
-            echo -e "\ttdr         : Reload the gid.sh script"
-            echo -e "\ttdre        : Review your todo list"
-            echo -e "\t--------------"
-
+            echo -e "Example usage:"
+            echo
+            echo -e "\t$ tda Conquer the world"
+            echo -e "\t$ tda Fix stack corruption in TCP"
+            echo -e "\t$ tda Book tickets for GnR tour"
+            echo
+            printf "%-30s %s\n" "tda --show" "Show your todo list"
+            printf "%-30s %s\n" "tda --help" "Show this help and exit."
+            printf "%-30s %s\n" "tda --usage" "Same as --help."
+            printf "%-30s %s\n" "tda --edit" "Edit the file directly using EDITOR env var. (Use caution)"
+            printf "%-30s %s\n" "tda --search word" "Search for word in task list"
+            printf "%-30s %s\n" "tda --alarm seconds" "Ring alarm after [seconds]."
+            printf "%-30s %s\n" "tdr"  "Reload the gid.sh script"
+            printf "%-30s %s\n" "tdre" "Review your todo list"
+            echo
+            echo "Report bugs at github.com/ashmew2/gid-get-it-done"
             return 0
             ;;
     esac
