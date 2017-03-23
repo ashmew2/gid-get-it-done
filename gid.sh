@@ -180,9 +180,7 @@ function tda {
     fi
 }
 
-#TODO - fix handling of special symbols in input
-#TODO - Decide if we need a tda-clean function as well to clean up old files etc or not.
-#TODO - Add network sync to keep safe with buffering.
-#TODO - Fix the naming scheme of all binaries, maybe tdreload is better than tdr as we can have tdremove and tdedit as well in that case
 #TODO - Follow code conventions, reeplace all $x -> ${x} (and consistent) (use regex)
 #TODO - define multiple levels of THRESHOLD REVIEW advice to help the user control abuse of this todo man
+#TODO - fix handling of special symbols in input
+#TODO - Add network sync to keep safe with buffering.
